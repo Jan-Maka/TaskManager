@@ -1,0 +1,40 @@
+#calendarContainer{
+    height: 50vh;
+}
+
+.flatpickr-calendar, .flatpickr-rContainer, .flatpickr-days, .dayContainer, .flatpickr-day{
+    width: 100% !important;
+    height: 100% !important;
+    min-width: auto !important;
+    max-width: none !important;
+}
+
+.flatpickr-calendar{
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+}
+
+.flatpickr-month{
+    background-color: #007bff !important;
+    height: 45px !important;
+    color: white !important;
+    border-radius: 5px 5px 0px 0px;
+}
+
+.float{
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    z-index: 999;
+    font-size: 24px;
+}
+
+*[contenteditable="true"], #edit-session-date{
+    box-sizing: content-box;
+    padding: 10px;
+    border: 2px solid blue;
+    border-radius: 7px;
+}
+
+#edit-session-date{
+    display: none;
+}

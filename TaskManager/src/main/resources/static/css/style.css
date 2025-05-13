@@ -1,0 +1,144 @@
+.highlight-card:hover {
+    background: lightgray;
+    cursor: pointer;
+}
+
+.bg-metal {
+    background: linear-gradient(120deg, #fdfbfb 0%, #ebedee 100%);
+}
+
+.bg-lightgray{
+    background: lightgray;
+}
+
+@keyframes fadeInFromLeft {
+    0% {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.fade-left {
+    opacity: 0;
+    animation: fadeInFromLeft 1s ease-out forwards;
+}
+
+.fade-from-top {
+    opacity: 0;
+    animation: fadeInFromTop 1s ease-out forwards;
+}
+
+@keyframes fadeInFromTop {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-from-bottom {
+    opacity: 0;
+    animation: fadeInFromBottom 1s ease forwards;
+}
+
+@keyframes fadeInFromBottom {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.custom-row {
+    --bs-gutter-x: 0;
+    --bs-gutter-y: 0;
+    padding: 0;
+}
+
+.no-border{
+    border-radius: 0;
+}
+
+.emoticon {
+    cursor: pointer;
+}
+
+.emoticon:hover{
+    transform: scale(1.2);
+    color: initial !important;
+}
+
+.enlarged {
+    transform: scale(1.2);
+}
+
+.workload-emoticon {
+    cursor: pointer;
+}
+
+.workload-emoticon:hover{
+    transform: scale(1.2);
+    color: initial !important;
+}
+
+.notification-area{
+    max-height: 100%;
+    font-size: 16px;
+    position: fixed;
+    bottom: 15px;
+    left: 20px;
+    right: 20px;
+}
+
+.notification-box{
+    font-size: inherit;
+    background-color: whitesmoke;
+    margin: 0 0 1rem;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    border-radius: 1rem;
+    box-shadow: 0 0.3rem 0.5rem;
+    backdrop-filter: blur(5px);
+}
+
+.notification-header{
+    background-color: #007bff;
+    color: white;
+    padding:0.75rem;
+    display: flex;
+    border-radius: 1rem 1rem 0 0;
+}
+
+.notification-content{
+    font-size: inherit;
+    padding: 0.25rem;
+    flex-shrink: 1;
+}
+
+@media (min-width: 481px) and (max-width: 767px) {
+    .notification-area {
+        left: 80px;
+        right: 80px;
+    }
+}
+
+@media (min-width: 768px) {
+    .notification-area {
+        width: 500px;
+        height: 0;
+        top: 5rem;
+        left: auto;
+        right: 1rem;
+    }
+}

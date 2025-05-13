@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" xmlns="http://www.w3.org/1999/html"
+      layout:decorate="~{layouts/layout}">
+<head>
+  <meta charset="UTF-8">
+  <title>Search Users</title>
+</head>
+<body>
+
+<section layout:fragment="content">
+
+  <div class="row vh-100">
+    <div class="col-12 col-sm-3 col-xl-2 px-sm-2 bg-metal border border-2 shadow d-flex">
+      <div class="d-flex flex-sm-column flex-row align-items-start px-2 pt-2">
+        <a class="d-flex align-items-center mb-3 me-auto text-decoration-none">
+          <span class="fs-4 fw-bold d-none d-sm-inline">Social Page</span>
+        </a>
+        <ul class="nav nav-pills flex-sm-column flex-row me-auto mb-0 align-items-start">
+          <li class="nav-item mb-1">
+            <a th:href="@{/social/my-profile}" class="nav-link px-2">
+              <i class="fs-4 bi bi-person-circle"></i>
+              <span class="ms-1 d-none d-sm-inline">Profile</span>
+            </a>
+          </li>
+          <li class="nav-item mb-1">
+            <a th:href="@{/social/search}" class="nav-link px-2 active">
+              <i class="fs-4 bi bi-search"></i>
+              <span class="ms-1 d-none d-sm-inline">Search</span>
+            </a>
+          </li>
+          <li class="nav-item mb-1">
+            <a th:href="@{/social/messages}" class="nav-link px-2">
+              <i class="fs-4 bi bi-chat-left"></i>
+              <span class="ms-1 d-none d-sm-inline">Messages</span>
+            </a>
+          </li>
+          <li class="nav-item mb-1">
+            <a th:href="@{/social/account-settings}" class="nav-link px-2">
+              <i class="fs-4 bi bi-gear"></i>
+              <span class="ms-1 d-none d-sm-inline">Settings</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="col d-flex flex-column">
+      <div class="row overflow-auto fade-from-bottom">
+        <div class="col pt-2">
+          <form class="my-3 row" th:action="@{/social/search}" method="post">
+            <div class="input-group" style="height: 50px;">
+              <input type="search" class="form-control rounded" placeholder="Search"  id="search" name="search" aria-label="Search" th:value="${(search != null) ? search : ''}"/>
+              <button type="submit" class="btn btn-outline-primary">
+                <i class="bi bi-search"></i>
+              </button>
+            </div>
+          </form>
+          <div th:if="${results == null}" style="height: 1000px"></div>
+          <h2 th:if="${results != null && results.isEmpty()}" style="height:1000px">No Results</h2>
+          <div class="row">
+            <div class="col-lg-4 col-md-6 col-sm-12" th:if="${results != null || !results.isEmpty()}" th:each="u :${results}">
+              <a class="card highlight-card m-3" th:href="@{/social/profile/{username}(username=${u.getUsername()})}" style="text-decoration: none;">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center m-3">
+                  <img class="img-fluid img-thumbnail rounded-circle m-1" th:if="${u.getBase64ProfilePic() == null}" th:src="@{/images/defaultPfp.jpg}" style="height: 200px; width: 200px;" alt="profile picture">
+                  <img class="img-fluid img-thumbnail rounded-circle m-1" th:if="${u.getBase64ProfilePic()}" th:src="${u.getBase64ProfilePic()}"  style="height: 200px; width: 200px;" alt="profile picture">
+                  <div class="d-flex flex-column">
+                    <h3 class="card-title" th:text="${'@'+u.getUsername()}"></h3>
+                    <h4 th:if="${ user == u || u.getAccountSettings().getDisplayNameString() == 'all' || (u.getAccountSettings().getDisplayNameString() == 'friend' && u.isUserFriend(user))}" class="card-text text-muted" th:text="${u.getFullName()}"></h4>
+                  </div>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section layout:fragment="scripts">
+</section>
+</body>
+</html>

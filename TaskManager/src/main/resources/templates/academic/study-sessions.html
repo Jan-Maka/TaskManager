@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" xmlns="http://www.w3.org/1999/html"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" th:href="@{/css/studySessions.css}">
+    <title>Study Sessions</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <meta id="_principal" name="_principal" th:data-principal="${user.getId()}"/>
+    <meta id="_csrf" name="_csrf" th:csrf_content="${_csrf.token}"/>
+    <meta id="_csrf_header" name="_csrf_header" th:csrf_content="${_csrf.headerName}"/>
+
+    <a id="showDetail" class="session" href="#" hidden></a>
+
+    <div class="row vh-100">
+        <div class="col-12 col-sm-3 col-xl-2 px-sm-2 bg-metal border border-2 shadow d-flex">
+            <div class="d-flex flex-sm-column flex-row align-items-start px-2 pt-2">
+                <a class="d-flex align-items-center mb-3 me-auto text-decoration-none">
+                    <span class="fs-4 fw-bold d-none d-sm-inline">Academic Page</span>
+                </a>
+                <ul class="nav nav-pills flex-sm-column flex-row me-auto mb-0 align-items-start">
+                    <li class="nav-item mb-1">
+                        <a th:href="@{/academic/dashboard}" class="nav-link px-2">
+                            <i class="fs-4 bi bi-stack"></i>
+                            <span class="ms-1 d-none d-sm-inline">Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item mb-1">
+                        <a th:href="@{/academic/assignments}" class="nav-link px-2">
+                            <i class="fs-4 bi bi-clipboard"></i>
+                            <span class="ms-1 d-none d-sm-inline">Assignments</span>
+                        </a>
+                    </li>
+                    <li class="nav-item mb-1">
+                        <a th:href="@{/academic/study-sessions}" class="nav-link px-2 active">
+                            <i class="fs-4 bi bi-calendar-event"></i>
+                            <span class="ms-1 d-none d-sm-inline">Study Sessions</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="col d-flex flex-column">
+            <div class="row fade-left">
+                <div class="col pt-2">
+                    <div class="row">
+                        <div class="col-xl-6 col-md-6 col-sm-12">
+                            <div id="#calendarContainer" class="border rounded-3 bg-metal shadow w-100 m-2"  style="height: 50vh;">
+                                <div class="bg-primary rounded d-flex align-items-center" style="height: 40px">
+                                    <h6 class="mb-0 text-white px-2"> Select Dates</h6>
+                                </div>
+                                <div class="m-3">
+                                    <input class="w-100 form-control" type="text" id="calendar-input" placeholder="Select a date" style="display: none">
+                                </div>
+                            </div>
+                            <div class="border rounded-3 bg-metal shadow w-100 m-2" style="height: 50vh;">
+                                <div class="h-100">
+                                    <div class="h-100" style="overflow: hidden;">
+                                        <canvas class="w-100 mx-auto p-3" id="sessionChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-6 col-md-6 col-sm-12">
+                            <div class="border rounded-3 bg-metal shadow min-vh-100 w-100 m-2">
+                                <div class="bg-primary rounded d-flex align-items-center" style="height: 40px">
+                                    <h6 id="dateTitle" class="mb-0 text-white px-2" th:text="${'Study Sessions For: '+dateLabel}"></h6>
+                                </div>
+                                <div id="studySessions" class="overflow-y-auto vh-100 mb-2" style="position: relative">
+                                    <h4 class="m-2" th:if="${studySessions.isEmpty()}">No study sessions for date!</h4>
+                                    <div th:each="studySession: ${studySessions}">
+                                        <div>
+                                            <div class="card highlight-card m-3 fade-left session" th:data-session="${studySession.getId()}">
+                                                <div class="card-body">
+                                                    <h4 id="sessionTitle" class="card-title" th:text="${studySession.getTitle()}"></h4>
+                                                    <h6 id="sessionDates" class="card-text" th:text="${'Date 📅: ' +  studySession.getFormattedDateTimeEventString()}"></h6>
+                                                    <hr>
+                                                    <h6 id="sessionLocation" class="card-text" th:text="${'Location 📍: ' + studySession.getLocation()}"></h6>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button id="createSessionBtn" class="float btn btn-success rounded-circle btn-lg" data-bs-toggle="modal" data-bs-target="#addingSession" aria-label="Create Study Session">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--Modals-->
+    <div class="modal fade" id="addingSession" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary">
+                    <h1 class="modal-title fs-5 text-white" id="staticBackdropLabel">Create Study Session</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createSession" action="#" method="post" enctype="multipart/form-data">
+                        <div class="form-floating mb-3">
+                            <input required type="text" class="form-control" name="title" id="title" maxlength="100" placeholder="Title">
+                            <label for="title" class="fw-semibold">Title</label>
+                        </div>
+                        <div class="mb-3 d-flex align-items-center">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="studyPurpose" id="selfStudy" checked>
+                                <label class="form-check-label fw-semibold" for="selfStudy">For Studying</label>
+                            </div>
+                            <div class="form-check" style="padding-left: 30px" th:if="${!assignments.isEmpty()}">
+                                <input class="form-check-input custom-padding" type="radio" name="studyPurpose" id="addAssignment">
+                                <label class="form-check-label fw-semibold" for="addAssignment">For an assignment</label>
+                            </div>
+                        </div>
+                        <div class="mb-3 form-floating" id="toggleAssignments" style="display: none" th:if="${!assignments.isEmpty()}">
+                            <select class="form-select" id="assignment" name="assignment">
+                                <option th:each="assignment: ${assignments}" th:data-assignment="${assignment.getId()}" th:text="${assignment.getTitle()}"></option>
+                            </select>
+                            <label for="assignment" class="fw-semibold">Assignment</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <textarea class="form-control" maxlength="250" placeholder="Info" id="info" name="info" style="height: 150px" required></textarea>
+                            <label for="info" class="fw-semibold">Description</label>
+                        </div>
+                        <div class="mb-3 form-floating">
+                            <input type="datetime-local" id="startDate" class="form-control" name="startDate" required>
+                            <label for="startDate" class="fw-semibold">Start Date</label>
+                        </div>
+                        <div class="mb-3 form-floating">
+                            <input type="datetime-local" id="endDate" class="form-control" name="endDate" required>
+                            <label for="endDate" class="fw-semibold">Due Date</label>
+                        </div>
+                        <div class="mb-3 form-floating">
+                            <select class="form-select" id="type" name="type">
+                                <option>In Person</option>
+                                <option>Online</option>
+                            </select>
+                            <label for="type" class="fw-semibold">Type</label>
+                        </div>
+                        <div class="mb-3 form-floating">
+                            <input required type="text" class="form-control" name="location" id="location" maxlength="100" placeholder="Location">
+                            <label for="location" class="fw-semibold">Location</label>
+                        </div>
+                        <button type="submit" class="btn btn-success" id="addSession">Create Study Session</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="sessionDetails" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary" id="sessionHeader">
+                </div>
+                <div class="modal-body" id="sessionBody">
+                </div>
+                <div class="modal-footer bg-primary" id="sessionFooter">
+                </div>
+            </div>
+        </div>
+    </div>
+
+</section>
+
+<section layout:fragment="scripts">
+    <script th:src="@{/js/assignment/studySessionsScript.js}"></script>
+    <script th:inline="javascript">
+        if([[ ${showSession} ]]){
+            const id = [[${showSession}]];
+            $(window).on("load", function(){
+                $("#showDetail").attr("data-session",id);
+                $("#showDetail").click();
+            });
+        }
+    </script>
+</section>
+</body>
+</html>

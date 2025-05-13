@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" xmlns="http://www.w3.org/1999/html"
+      layout:decorate="~{layouts/layout}">
+
+<head>
+    <title>Sing-up Form</title>
+</head>
+<body>
+
+<section layout:fragment="jumbotron">
+    <div class="jumbotron jumbotron-fluid bg-light border-bottom p-5">
+        <div class="container">
+            <h1 class=" display-4 text-center fw-semibold">Task Manager</h1>
+            <p class="lead text-center">Create an Account to start using the Task Manager Application.</p>
+        </div>
+    </div>
+</section>
+
+<section layout:fragment="content">
+    <div class="row justify-content-center pt-3">
+        <div class="col-12 col-lg-5">
+            <form th:action="@{/sign-up}" method="post" th:object="${user}">
+                <div class="alert alert-danger" th:if="${#fields.hasErrors()}">
+                    <h3 class="text-center">Sign-Up was unsuccessful check error messages to see why.</h3>
+                </div>
+                <p th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></p>
+                <div class="form-floating my-4">
+                    <input required type="email" class="form-control" id="email" placeholder="email@address.com" th:field="*{email}">
+                    <label class="fw-semibold" for="email">Enter Email</label>
+                </div>
+                <div class="row my-3">
+                    <p th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}"></p>
+                    <div class="col form-floating">
+                        <input type="text" class="form-control" placeholder="Enter First Name" id="firstName" required th:field="*{firstName}">
+                        <label class="fw-semibold" for="firstName"> First Name</label>
+                    </div>
+                    <p th:if="${#fields.hasErrors('surname')}" th:errors="*{surname}"></p>
+                    <div class="col form-floating">
+                        <input type="text" class="form-control" placeholder="Enter Surname Name" id="surname" required th:field="*{surname}">
+                        <label class="fw-semibold" for="surname"> Surname</label>
+                    </div>
+                </div>
+                <p th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></p>
+                <div class="form-floating my-4">
+                    <input required type="text" class="form-control" id="username" placeholder="Username" th:field="*{username}">
+                    <label class="fw-semibold" for="username">Enter Username</label>
+                </div>
+                <p th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></p>
+                <div class="form-floating my-4">
+                    <input required type="password" class="form-control" id="password" placeholder="Password" th:field="*{password}">
+                    <label class="fw-semibold"for="password">Enter Password</label>
+                </div>
+                <div class="form-floating my-4">
+                    <input required type="password" class="form-control" id="re-password" name="repassword" placeholder="Password">
+                    <label class="fw-semibold"for="re-password">Re-Enter Password</label>
+                </div>
+                <div class="col m-2 pb-5 pt-2 ms-auto">
+                    <button type="submit" class="btn btn-success" id="sign-up">Sign up</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+</body>
+</html>

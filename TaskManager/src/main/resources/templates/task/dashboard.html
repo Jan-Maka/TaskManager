@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" xmlns="http://www.w3.org/1999/html"
+      layout:decorate="~{layouts/layout}">
+
+<head>
+    <title>Tasks</title>
+    <link rel="stylesheet" th:href="@{/css/task.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body>
+
+<section layout:fragment="content">
+    <meta id="_principal" name="_principal" th:data-principal="${user.getId()}"/>
+    <meta id="_csrf" name="_csrf" th:csrf_content="${_csrf.token}"/>
+    <meta id="_csrf_header" name="_csrf_header" th:csrf_content="${_csrf.headerName}"/>
+    <meta sec:authorize="isAuthenticated()" id="_user_roles" name="_user_roles" th:data-roles="${user.getUserRolesIntoString()}"/>
+
+
+    <div class="row vh-100">
+        <div class="col-12 col-sm-3 col-xl-2 px-sm-2 bg-metal border border-2 shadow d-flex">
+            <div class="d-flex flex-sm-column flex-row align-items-start px-2 pt-2">
+                <a class="d-flex align-items-center mb-3 me-auto text-decoration-none">
+                    <span class="fs-4 fw-bold d-none d-sm-inline">Tasks Page</span>
+                </a>
+                <ul class="nav nav-pills flex-sm-column flex-row me-auto mb-0 align-items-start">
+                    <li class="nav-item mb-1">
+                        <a th:href="@{/tasks/dashboard}" class="nav-link active px-2">
+                            <i class="fs-4 bi bi-stack"></i>
+                            <span class="ms-1 d-none d-sm-inline">Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item mb-1">
+                        <a href="#categories" data-bs-toggle="collapse" th:classappend="${tasks != null || category != null ? 'active' : ''}" class="nav-link px-2">
+                            <i class="fs-4 bi-bookmarks"></i>
+                            <span class="ms-1 d-none d-sm-inline">Personal Tasks</span>
+                        </a>
+                        <ul class="collapse show nav flex-column ms-1 mt-2" id="categories" data-bs-parent="#menu">
+                            <li class="w-100">
+                                <a th:href="@{/tasks/personal}" th:classappend="${tasks != null ? 'active' : ''}" class="nav-link px-2"> <span>All Tasks</span></a>
+                            </li>
+                            <li class="w-100" th:each="cat: ${categories}">
+                                <a th:href="@{/tasks/category(cat=${cat.getName()}, id=${cat.getId()})}" th:classappend="${category != null && category == cat ? 'active' : ''}" class="nav-link px-2"> <span th:text="${cat.getName()}"></span></a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li sec:authorize="hasRole('ROLE_MEMBER')" class="nav-item mb-1">
+                        <a  th:href="@{/tasks/group}" th:classappend="${groupTasks != null ? 'active' : ''}" class="nav-link px-2">
+                            <i class="fs-4 bi bi-people"></i>
+                            <span class="ms-1 d-none d-sm-inline">Group Tasks</span>
+                        </a>
+                    </li>
+                    <li sec:authorize="hasRole('ROLE_MEMBER')" class="nav-item mb-1">
+                        <a th:href="@{/tasks/archived}" th:classappend="${archivedTasks != null ? 'active' : ''}" class="nav-link px-2">
+                            <i class="fs-4 bi bi-save"></i>
+                            <span class="ms-1 d-none d-sm-inline">Archived Tasks</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="col d-flex flex-column">
+            <div class="row overflow-auto fade-left">
+                <div class="col pt-2">
+                    <div class="row custom-row">
+                        <div class="col-lg-6 col-md-6 col-sm-12">
+                            <div class="border rounded-3 bg-metal shadow w-100 mb-1" style="height: 50vh;">
+                                <div class="bg-primary rounded d-flex align-items-center" style="height: 40px;">
+                                    <h6 class="mb-3 mt-3 text-white px-2">Activity on Tasks</h6>
+                                </div>
+                                <div style="height: calc(100% - 40px);">
+                                    <div class="h-100" style="overflow: hidden;">
+                                        <canvas class="w-100 mx-auto p-3" id="activityOnTasks"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="border rounded-3 bg-metal shadow w-100" style="height: 50vh;">
+                                <div class="bg-primary rounded d-flex align-items-center" style="height: 40px;">
+                                    <h6 class="mb-3 mt-3 text-white px-2">Tasks For Today</h6>
+                                </div>
+                                <div class="overflow-y-auto" style="height: calc(100% - 40px);">
+                                    <h5 class="m-2" th:if="${tasksForToday.isEmpty()}">No tasks for today!</h5>
+                                    <div th:each="task : ${tasksForToday}">
+                                        <div th:if="${task.getClass().getSimpleName() == 'Task'}">
+                                            <a th:href="@{/tasks/personal/{taskId}(taskId=${task.getId()})}" class="card m-3 fade-left task" style="text-decoration: none">
+                                                <div class="card-body highlight-card">
+                                                    <h4 class="card-text" th:text="${task.getTitle()+task.getStatus()}"></h4>
+                                                    <span class="badge text-bg-danger mb-1" th:if="${task.isOverdue()}">Overdue</span>
+                                                    <h5 class="card-text text-muted" th:text="'Category 📚:️ '+${task.getCategory().getName()}"></h5>
+                                                    <p class="card-text" th:text="'Type 🚨: '+${task.getType()}"></p>
+                                                    <hr>
+                                                    <h6 class="card-text" th:text="'Date for completion 📅: '+ ${task.getEndDateString()}"></h6>
+                                                </div>
+                                            </a>
+                                        </div>
+                                        <div th:if="${task.getClass().getSimpleName() == 'GroupTask'}">
+                                            <a th:styleappend="${!user.hasRole('MEMBER') ? 'pointer-events:none': ''}" th:href="@{/tasks/group/{taskId}(taskId=${task.getId()})}" class="card m-3 fade-left task" style="text-decoration: none">
+                                                <div th:classappend="${!user.hasRole('MEMBER') ? 'bg-secondary' : 'highlight-card'}" class="card-body">
+                                                    <h4 class="card-text" th:text="${task.getTitle()+task.getStatus()}"></h4>
+                                                    <span class="badge text-bg-danger mb-1" th:if="${task.isOverdue()}">Overdue</span>
+                                                    <h5 class="text-muted card-text" th:text="'Number of Users 🕴:️ '+${task.getUsers().size()}"></h5>
+                                                    <p class="card-text" th:text="'Type 🚨: '+${task.getType()}"></p>
+                                                    <hr>
+                                                    <h6 class="card-text" th:text="'Date for completion 📅: '+ ${task.getEndDateString()}"></h6>
+                                                </div>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6 col-md-6 col-sm-12">
+                            <div class="card mx-3 rounded-3 shadow">
+                                <div class="card-header bg-primary">
+                                    <h5 class="text-white">Suggested Tasks to complete!</h5>
+                                </div>
+                                <div class="card-body bg-metal overflow-auto" style="height: calc(100vh - 45px);">
+                                    <h5 class="m-2" th:if="${suggestedTasks.isEmpty()}">No tasks to suggest!</h5>
+                                    <div th:each="task : ${suggestedTasks}">
+                                        <div th:if="${task.getClass().getSimpleName() == 'Task'}">
+                                            <a th:href="@{/tasks/personal/{taskId}(taskId=${task.getId()})}" class="card m-3 fade-left task" style="text-decoration: none">
+                                                <div class="card-body highlight-card">
+                                                    <h4 class="card-text" th:text="${task.getTitle()+task.getStatus()}"></h4>
+                                                    <span class="badge text-bg-danger mb-1" th:if="${task.isOverdue()}">Overdue</span>
+                                                    <h5 class="card-text text-muted" th:text="'Category 📚:️ '+${task.getCategory().getName()}"></h5>
+                                                    <p class="card-text" th:text="'Type 🚨: '+${task.getType()}"></p>
+                                                    <div class="progress">
+                                                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" th:style="'width:' + ${task.getProgress()} + '%'" th:value="${task.getProgress()}" aria-valuemin="0" aria-valuemax="100" th:text="${task.getProgress()+'%'}"></div>
+                                                    </div>
+                                                    <hr>
+                                                    <h6 class="card-text" th:text="'Date for completion 📅: '+ ${task.getEndDateString()}"></h6>
+                                                </div>
+                                            </a>
+                                        </div>
+                                        <div th:if="${task.getClass().getSimpleName() == 'GroupTask'}">
+                                            <a th:styleappend="${!user.hasRole('MEMBER') ? 'pointer-events:none': ''}" th:href="@{/tasks/group/{taskId}(taskId=${task.getId()})}" class="card m-3 fade-left task" style="text-decoration: none">
+                                                <div th:classappend="${!user.hasRole('MEMBER') ? 'bg-secondary' : 'highlight-card'}" class="card-body">
+                                                    <h4 class="card-text" th:text="${task.getTitle()+task.getStatus()}"></h4>
+                                                    <span class="badge text-bg-danger mb-1" th:if="${task.isOverdue()}">Overdue</span>
+                                                    <h5 class="text-muted card-text" th:text="'Number of Users 🕴:️ '+${task.getUsers().size()}"></h5>
+                                                    <p class="card-text" th:text="'Type 🚨: '+${task.getType()}"></p>
+                                                    <div class="progress">
+                                                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" th:style="'width:' + ${task.getProgress()} + '%'" th:value="${task.getProgress()}" aria-valuemin="0" aria-valuemax="100" th:text="${task.getProgress()+'%'}"></div>
+                                                    </div>
+                                                    <hr>
+                                                    <h6 class="card-text" th:text="'Date for completion 📅: '+ ${task.getEndDateString()}"></h6>
+                                                </div>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</section>
+
+<section layout:fragment="scripts">
+    <script th:src="@{/js/task/dashboard.js}"></script>
+</section>
+
+</body>
+</html>

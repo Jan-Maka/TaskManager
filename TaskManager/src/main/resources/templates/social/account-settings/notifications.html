@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Notification</title>
+</head>
+<body>
+<form th:action="@{/social/account-settings/update-notifications}" th:object="${accountSettings}" method="post">
+    <hr>
+    <p>Notifications will be sent if a Task/Assignment/Study-Sessions that are within 30 minutes of beginning.</p>
+    <p>Emails will be sent daily showing Task/Assignment/Study-Sessions that are to start or set to be completed that day.</p>
+    <hr>
+    <h5>Send Task Notifications</h5>
+    <hr>
+    <div class="mb-3">
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="notifyTask" id="sendTaskNotification" th:value="${true}" th:field="*{sendTaskNotifications}" th:checked="*{sendTaskNotifications}">
+            <label class="form-check-label" for="sendTaskNotification">
+                Send
+            </label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="notifyTask" id="dontSendTaskNotification" th:value="${false}" th:field="*{sendTaskNotifications}" th:checked="*{!sendTaskNotifications}">
+            <label class="form-check-label" for="dontSendTaskNotification">
+                Don't Send
+            </label>
+        </div>
+    </div>
+
+    <h5>Send Assignment Notifications</h5>
+    <hr>
+    <div class="mb-3">
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="notifyAssignment" id="sendAssignmentNotification" th:value="${true}" th:field="*{sendAssignmentNotifications}" th:checked="*{sendAssignmentNotifications}">
+            <label class="form-check-label" for="sendAssignmentNotification">
+                Send
+            </label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="notifyAssignment" id="dontSendAssignmentNotification" th:value="${false}" th:field="*{sendAssignmentNotifications}" th:checked="*{!sendAssignmentNotifications}">
+            <label class="form-check-label" for="dontSendAssignmentNotification">
+                Don't Send
+            </label>
+        </div>
+    </div>
+
+    <h5>Send Study-Sessions Notifications</h5>
+    <hr>
+    <div class="mb-3">
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="notifyStudySessions" id="sendStudySessionNotification" th:value="${true}" th:field="*{sendStudySessionNotifications}" th:checked="*{sendStudySessionNotifications}">
+            <label class="form-check-label" for="sendStudySessionNotification">
+                Send
+            </label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="notifyStudySessions" id="dontSendStudySessionNotification" th:value="${false}" th:field="*{sendStudySessionNotifications}" th:checked="*{!sendStudySessionNotifications}">
+            <label class="form-check-label" for="dontSendStudySessionNotification">
+                Don't Send
+            </label>
+        </div>
+    </div>
+
+    <h5>Email Task Reminders</h5>
+    <hr>
+    <div class="mb-3">
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="emailTask" id="emailTaskReminders" th:value="${true}" th:field="*{emailTaskReminders}" th:checked="*{emailTaskReminders}">
+            <label class="form-check-label" for="emailTaskReminders">
+                Email
+            </label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="emailTask" id="noEmailTaskReminders" th:value="${false}" th:field="*{emailTaskReminders}" th:checked="*{!emailTaskReminders}">
+            <label class="form-check-label" for="noEmailTaskReminders">
+                Don't Email
+            </label>
+        </div>
+    </div>
+
+    <h5>Email Assignment Reminders</h5>
+    <hr>
+    <div class="mb-3">
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="emailAssignment" id="emailAssignmentReminders" th:value="${true}" th:field="*{emailAssignmentReminders}" th:checked="*{emailAssignmentReminders}">
+            <label class="form-check-label" for="emailAssignmentReminders">
+                Email
+            </label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="emailAssignment" id="noEmailAssignmentReminders" th:value="${false}" th:field="*{emailAssignmentReminders}" th:checked="*{!emailAssignmentReminders}">
+            <label class="form-check-label" for="noEmailAssignmentReminders">
+                Don't Email
+            </label>
+        </div>
+    </div>
+
+    <h5>Email Study Session Reminders</h5>
+    <hr>
+    <div class="mb-3">
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="emailSession" id="emailStudySessionReminders" th:value="${true}" th:field="*{emailStudySessionReminders}" th:checked="*{emailStudySessionReminders}">
+            <label class="form-check-label" for="emailStudySessionReminders">
+                Email
+            </label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="emailSession" id="noEmailStudySessionReminders" th:value="${false}" th:field="*{emailStudySessionReminders}" th:checked="*{!emailStudySessionReminders}">
+            <label class="form-check-label" for="noEmailStudySessionReminders">
+                Don't Email
+            </label>
+        </div>
+    </div>
+
+<!--    <h5>Email Event Reminders</h5>-->
+<!--    <hr>-->
+<!--    <div class="mb-3">-->
+<!--        <div class="form-check">-->
+<!--            <input class="form-check-input" type="radio" name="emailEvent" id="emailEventReminders" th:value="${true}" th:field="*{emailEventReminders}" th:checked="*{emailEventReminders}">-->
+<!--            <label class="form-check-label" for="emailEventReminders">-->
+<!--                Email-->
+<!--            </label>-->
+<!--        </div>-->
+<!--        <div class="form-check">-->
+<!--            <input class="form-check-input" type="radio" name="emailEvent" id="noEmailEventReminders" th:value="${false}" th:field="*{emailEventReminders}" th:checked="*{!emailEventReminders}">-->
+<!--            <label class="form-check-label" for="noEmailEventReminders">-->
+<!--                Don't Email-->
+<!--            </label>-->
+<!--        </div>-->
+<!--    </div>-->
+
+    <h5>Confirm Changes</h5>
+    <p>Enter your password to confirm the changes</p>
+    <hr>
+    <div class="mb-3 form-floating">
+        <input type="password" class="form-control" placeholder="Enter Password" id="passwordNotifications">
+        <label class="fw-semibold" for="passwordNotifications">Enter Password</label>
+    </div>
+    <div class="mb-3">
+        <button type="submit" class="btn btn-success" id="saveNotifications" disabled>Save</button>
+        <button type="reset" class="btn btn-outline-danger">Cancel</button>
+    </div>
+</form>
+
+</body>
+</html>

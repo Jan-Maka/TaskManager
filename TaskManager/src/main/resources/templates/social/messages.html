@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" xmlns="http://www.w3.org/1999/html"
+      layout:decorate="~{layouts/layout}">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" th:href="@{/css/messages.css}">
+  <title>Messages</title>
+</head>
+<body>
+
+<section layout:fragment="content">
+  <meta id="_principal" name="_principal" th:data-principal="${user.getId()}"/>
+  <meta id="_username" name="_username" th:data-username="${user.getUsername()}"/>
+  <meta id="_csrf" name="_csrf" th:csrf_content="${_csrf.token}"/>
+  <meta id="_csrf_header" name="_csrf_header" th:csrf_content="${_csrf.headerName}"/>
+  <meta sec:authorize="isAuthenticated()" id="_user_roles" name="_user_roles" th:data-roles="${user.getUserRolesIntoString()}"/>
+
+  <div class="row vh-100">
+    <div class="col-12 col-sm-3 col-xl-2 px-sm-2 bg-metal border border-2 shadow d-flex">
+      <div class="d-flex flex-sm-column flex-row align-items-start px-2 pt-2">
+        <a class="d-flex align-items-center mb-3 me-auto text-decoration-none">
+          <span class="fs-4 fw-bold d-none d-sm-inline">Social Page</span>
+        </a>
+        <ul class="nav nav-pills flex-sm-column flex-row me-auto mb-0 align-items-start">
+          <li class="nav-item mb-1">
+            <a th:href="@{/social/my-profile}" class="nav-link px-2">
+              <i class="fs-4 bi bi-person-circle"></i>
+              <span class="ms-1 d-none d-sm-inline">Profile</span>
+            </a>
+          </li>
+          <li class="nav-item mb-1">
+            <a th:href="@{/social/search}" class="nav-link px-2">
+              <i class="fs-4 bi bi-search"></i>
+              <span class="ms-1 d-none d-sm-inline">Search</span>
+            </a>
+          </li>
+          <li class="nav-item mb-1">
+            <a th:href="@{/social/messages}" class="nav-link px-2 active">
+              <i class="fs-4 bi bi-chat-left"></i>
+              <span class="ms-1 d-none d-sm-inline">Messages</span>
+            </a>
+          </li>
+          <li class="nav-item mb-1">
+            <a th:href="@{/social/account-settings}" class="nav-link px-2">
+              <i class="fs-4 bi bi-gear"></i>
+              <span class="ms-1 d-none d-sm-inline">Settings</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="col d-flex flex-column">
+      <div class="row overflow-auto fade-from-bottom">
+        <div class="col">
+          <div class="row">
+            <div class="col-3 p-0 border">
+              <nav class="navbar navbar-expand-lg rounded">
+                <div class="container-fluid">
+                  <h1 class="navbar-brand d-none d-md-block mb-0">Messages</h1>
+                  <button sec:authorize="hasRole('MEMBER')" id="addChat" class="btn btn-success me-auto" data-bs-toggle="modal" data-bs-target="#createChatModal" aria-label="Create Chat">
+                    <i class="bi bi-envelope-plus"></i>
+                  </button>
+                  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#conversationNavbar" aria-controls="conversationNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                  </button>
+                  <div class="collapse navbar-collapse" id="conversationNavbar">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    </ul>
+                    <form class="d-flex" id="chatSearch">
+                      <input id="search-input" class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+                      <button class="btn btn-success" type="submit">
+                        <i class="bi bi-search"></i>
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </nav>
+            </div>
+            <div class="col-9 border">
+              <nav class="navbar navbar-expand-lg rounded p-0">
+                <div class="container-fluid">
+                  <div>
+                    <div id="userChatTitle">
+                      <h2 class="mb-0 p-3">Direct Messaging</h2>
+                    </div>
+                  </div>
+                </div>
+              </nav>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-3 p-0">
+              <div id="chats" class="overflow-y-auto border" style="height: calc(100vh - 75px);">
+                <div th:each="chat : ${chats}">
+                  <div th:if="${chat.getClass().getSimpleName() == 'Conversation'}" th:each="friend: ${chat.getParticipants()}">
+                    <div th:if="${friend != user}" class="border-bottom d-flex highlight-card conversation" th:data-conversation="${chat.getId()}" th:data-isfriend="${friend.isUserFriend(user)}" >
+                      <img class="img-fluid img-thumbnail rounded-circle m-1" th:if="${friend.getBase64ProfilePic() == null}" th:src="@{/images/defaultPfp.jpg}" style="height: 60px; width: 60px;" alt="profile picture">
+                      <img class="img-fluid img-thumbnail rounded-circle m-1" th:if="${friend.getBase64ProfilePic()}" th:src="${friend.getBase64ProfilePic()}"  style="height: 60px; width: 60px;" alt="profile picture">
+                      <h4 class="m-1 d-none d-md-block" th:text="${'@'+friend.getUsername()}"></h4>
+                      <div class="d-flex align-items-center ms-auto me-3 notification d-none">
+                        <div class="notif">
+                          <i class="fa-solid bi-chat-text text-white"></i>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div th:if="${chat.getClass().getSimpleName() == 'GroupChat'}">
+                    <div th:styleappend="${!user.hasRole('MEMBER') ? 'pointer-events:none' : ''}" th:classappend="${!user.hasRole('MEMBER') ? 'bg-secondary': 'highlight-card'}" class="border-bottom d-flex group-chat" th:data-groupchat="${chat.getId()}">
+                      <div class="m-1 d-flex">
+                        <img class="img-fluid img-thumbnail rounded-circle m-1" th:src="@{/images/groupImg.png}" style="height: 60px; width: 60px;" alt="group picture">
+                        <div class="d-flex flex-column m-1 d-none d-md-block">
+                          <h4 class="m-0" th:text="${chat.getGroupName()}"></h4>
+                          <div class="d-flex flex-row">
+                            <div th:each="participant: ${chat.getParticipants()}">
+                              <p class="ms-1 text-muted" th:if="${participant != user}" th:text="${participant.getUsername()}"></p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="d-flex align-items-center ms-auto me-3 notification d-none">
+                        <div class="notif">
+                          <i class="fa-solid bi-chat-text text-white"></i>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-9 p-0" style="position: relative;">
+              <div id="chat" class="overflow-y-auto d-flex flex-column border" style="height: calc(100vh - 118px)">
+              </div>
+              <div class="w-100 mt-2" style="position: absolute; bottom: 0;">
+                <div id="attachments" class="d-flex"></div>
+                <form class="d-flex flex-row w-100" id="sendMessage">
+                  <input id="messageInput" class="form-control form-control-lg no-border" type="text" placeholder="Enter a message" aria-label="Message" maxlength="255" disabled>
+                  <button type="button" class="btn btn-success no-border" id="attachBtn" data-bs-toggle="modal" data-bs-target="#attachmentModal" disabled>
+                    <i class="bi bi-file-plus"></i>
+                  </button>
+                  <button class="btn btn-primary no-border" type="submit" id="sendBtn" disabled>
+                    <i class="bi bi-send"></i>
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!--  Modals-->
+  <div class="modal fade" id="attachmentModal" aria-hidden="true" aria-labelledby="Message Attachment">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="exampleModalToggleLabel">Add Attachment</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="attachBody">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="createChatModal" aria-hidden="true" aria-labelledby="Create Chat">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5">Create Group Chat</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" style="min-height: 600px">
+          <form class="d-flex" id="groupProjSearch">
+            <input id="searchProj" class="form-control" type="search" placeholder="Search" aria-label="Search">
+            <button class="btn btn-success me-4" type="submit">
+              <i class="bi bi-search"></i>
+            </button>
+            <select class="flex-grow form-control form-select border border-dark" id="searchType" name="select">
+              <option th:value="group">Group Tasks</option>
+              <option th:value="assignment">Assignments</option>
+            </select>
+          </form>
+          <div id="results">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section layout:fragment="scripts">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+  <script th:src="@{/js/social/message.js}"></script>
+</section>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Membership status</title>
+</head>
+<body>
+    <hr>
+    <h4 th:text="${'Status: ' + (user.hasRole('MEMBER') ? 'Member ⭐': 'Regular User 👤')}"></h4>
+    <p class="text-muted">Note: Archived Tasks are available for another 30 days until you renew your subscription. </p>
+    <hr>
+    <h5>Member Benefits</h5>
+    <ul class="mb-3">
+        <li>Collaboration features 👥
+            <ul>
+                <li>Group Task Collaboration! 🕴️</li>
+                <li>Group Assignment Collaboration! 📒</li>
+                <li>Group Chat! 📨</li>
+            </ul>
+        </li>
+        <li>Create unlimited amount of categories! 💹</li>
+        <li>Schedule study sessions! 🏫</li>
+        <li>File attachment limit of 5MB! 🗃️</li>
+        <li>No More advertisements! </li>
+    </ul>
+    <hr>
+    <form class="mb-3" th:if="${!user.hasRole('MEMBER')}" th:action="@{/social/account-settings/subscribe}" method="post">
+        <h6>Subscribing will cause you to logout in order to enable features!</h6>
+        <button class="btn btn-primary">Subscribe! ⭐</button>
+    </form>
+</body>
+</html>

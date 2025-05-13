@@ -1,0 +1,18 @@
+.friends-scroll {
+    overflow-y: auto;
+    height: 100vh;
+}
+
+.activity-col{
+    height: 50vh;
+}
+
+@media (max-width: 1200px) {
+    .friends-scroll {
+        height: auto    ;
+        max-height: 300px;
+    }
+    .activity-col{
+        height: 400px;
+    }
+}

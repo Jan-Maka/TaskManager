@@ -1,0 +1,22 @@
+.delete-task-btn, .cancel-edit-mode, .save-task-btn, .edit-task-btn, .leave-task-btn{
+    cursor: pointer;
+}
+
+*[contenteditable="true"], #edit-task-date, #edit-category, #edit-progress, #edit-type , #edit-mood, #edit-workload, #edit-file-attachments, #users-on-task, #users-to-add{
+    box-sizing: content-box;
+    padding: 10px;
+    border: 2px solid blue;
+    border-radius: 7px;
+}
+
+#edit-task-date, #edit-category, #edit-progress, #edit-type, #edit-mood, #edit-workload, #edit-file-attachments, #edit-users {
+    display: none;
+}
+
+.float{
+    position: fixed;
+    bottom: 55px;
+    right: 50px;
+    z-index: 999;
+    font-size: 24px;
+}

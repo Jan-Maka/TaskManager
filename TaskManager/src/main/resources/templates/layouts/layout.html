@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link th:href="@{/css/style.css}" rel="stylesheet"/>
+    <link th:href="@{/webjars/izitoast/1.4.0/dist/css/iziToast.min.css}" th:rel="stylesheet" />
+    <link rel="stylesheet" href="https://unpkg.com/dropzone@6.0.0-beta.1/dist/dropzone.css" type="text/css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <title>Layout Page</title>
+</head>
+<body>
+<header>
+  <nav class="navbar navbar-dark  navbar-expand-lg bg-primary border-bottom shadow">
+    <div class="container-fluid">
+          <a class="navbar-brand fw-bold ms-2 mb-0" href="#">Task Manager Application</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+         <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+        <div class="navbar-nav me-auto">
+            <ul class="navbar-nav">
+                <li sec:authorize="isAuthenticated()" class="nav-item">
+                    <a class="nav-link" th:href="@{/home}">Home</a>
+                </li>
+                <li sec:authorize="isAuthenticated()" class="nav-item">
+                    <a class="nav-link" th:href="@{/tasks/dashboard}">Tasks</a>
+                </li>
+                <li sec:authorize="isAuthenticated()" class="nav-item">
+                    <a class="nav-link" th:href="@{/academic/dashboard}">Academia</a>
+                </li>
+                <li sec:authorize="isAuthenticated()" class="nav-item">
+                    <a class="nav-link" th:href="@{/calendar}">Calendar</a>
+                </li>
+                <li sec:authorize="isAuthenticated()" class="nav-item">
+                    <a class="nav-link" th:href="@{/social/my-profile}">Social</a>
+                </li>
+            </ul>
+        </div>
+        <div class="navbar-nav ms-auto">
+            <ul sec:authorize="isAnonymous()" class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" aria-current="page" th:href="@{/sign-up}">Sign up</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" aria-current="page" th:href="@{/login}">Login</a>
+                </li>
+            </ul>
+            <div class="dropdown me-3" sec:authorize="isAuthenticated()" th:if="${user != null}">
+                <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+                    <img class="img-fluid img-thumbnail rounded-circle" th:if="${user.getBase64ProfilePic()}" th:src="${user.getBase64ProfilePic()}"  style="width: 50px; height: 50px;" alt="profile picture">
+                    <img class="img-fluid img-thumbnail rounded-circle" th:if="${user.getBase64ProfilePic() == null}" th:src="@{/images/defaultPfp.jpg}" style="width: 50px; height: 50px;" alt="profile picture">
+                    <span class="d-none d-sm-inline mx-3 fs-4" th:text="${'@'+user.getUsername()}"></span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
+                    <li><a class="dropdown-item" th:href="@{/social/my-profile}">My Profile</a></li>
+                    <li><a class="dropdown-item" th:href="@{/social/account-settings}">Settings</a></li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li class="dropdown-item">
+                    <form id="navbar-logout-form" th:action="@{/logout}" method="post">
+                        <input type="hidden">
+                        <a id="navbar-logout-btn" class="nav-link" href="#">Logout</a>
+                    </form>
+                    </li>
+                </ul>
+            </div>
+          </div>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<section layout:fragment="jumbotron"></section>
+
+<section class="container-fluid" layout:fragment="content">
+  <p>Page content goes here</p>
+</section>
+
+<div sec:authorize="isAuthenticated()" th:if="${user.getAccountSettings().isSendTaskNotifications() || user.getAccountSettings().isSendAssignmentNotifications() ||user.getAccountSettings().isSendStudySessionNotifications()}" id="notificationArea" class="notification-area">
+</div>
+
+<script src="https://unpkg.com/dropzone@6.0.0-beta.1/dist/dropzone-min.js"></script>
+<script th:src="@{/webjars/izitoast/1.4.0/dist/js/iziToast.min.js}"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.6.4.js" integrity="sha256-a9jBBRygX1Bh5lt8GZjXDzyOB+bWve9EiO7tROUtj/E="crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script th:src="@{/js/site.js}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
+<section layout:fragment="scripts"></section>
+</body>
+</html>

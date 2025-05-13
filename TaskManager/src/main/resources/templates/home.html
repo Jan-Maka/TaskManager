@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" xmlns="http://www.w3.org/1999/html"
+      layout:decorate="~{layouts/layout}">
+
+<head>
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <title>Home</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <meta id="_csrf" name="_csrf" th:csrf_content="${_csrf.token}"/>
+    <meta id="_csrf_header" name="_csrf_header" th:csrf_content="${_csrf.headerName}"/>
+    <meta sec:authorize="isAuthenticated()" id="_user_roles" name="_user_roles" th:data-roles="${user.getUserRolesIntoString()}"/>
+    <div class="row">
+        <div class="col-lg-4 col-md-8 col-sm-12">
+            <div class="border rounded bg-metal align shadow p-3 shadow my-3 fade-from-bottom">
+                <h1 class="fw-bold" id="date"></h1>
+            </div>
+        </div>
+    </div>
+    <div class="row my-3 fade-from-bottom">
+        <div class="col-lg-4 col-md-12 col-sm-12" style="height: 40vh;">
+            <div class="h-100" style="overflow: hidden;">
+                <canvas class="mx-auto h-100" id="activityChart"></canvas>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-12 col-sm-12 my-3">
+            <div class="row mb-3" style="height: 20vh;">
+                <div class="col h-100">
+                    <div  class="card card-zoom text-dark bg-light shadow">
+                        <div class="card-body">
+                            <h6 class="card-title text-center">Tasks For Today!</h6>
+                            <p class="card-text text-center display-3" th:text="${tasksForToday}"></p>
+                        </div>
+                        <a href="#" class="stretched-link"></a>
+                    </div>
+                </div>
+                <div class="col h-100">
+                    <div class="card card-zoom text-dark bg-light shadow">
+                        <div class="card-body">
+                            <h6 class="card-title text-center">Completed Today!</h6>
+                            <p class="card-text text-center display-3" th:text="${tasksComp}"}></p>
+                        </div>
+                        <a href="#" class="stretched-link"></a>
+                    </div>
+                </div>
+            </div>
+            <div class="row" style="height: 20vh;">
+                <div class="col h-100">
+                    <div  class="card card-zoom text-dark bg-light shadow">
+                        <div class="card-body">
+                            <h6 class="card-title text-center">Tasks In Progress!</h6>
+                            <p class="card-text text-center display-3" th:text="${tasksInProg.size()}"></p>
+                        </div>
+                        <a href="#" class="stretched-link"></a>
+                    </div>
+                </div>
+                <div class="col h-100">
+                    <div class="card card-zoom text-dark bg-light shadow">
+                        <div class="card-body">
+                            <h6 class="card-title text-center">Tasks To Start!</h6>
+                            <p class="card-text text-center display-3" th:text="${tasksToStart}"></p>
+                        </div>
+                        <a href="#" class="stretched-link"></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-12 col-sm-12">
+            <div class="border rounded-3 bg-metal shadow w-100" style="height: 40vh;">
+                <div class="bg-primary rounded d-flex align-items-center" style="height: 40px;">
+                    <h6 class="mb-3 mt-3 text-white px-2">Mood Past Week</h6>
+                </div>
+                <div style="height: calc(100% - 40px);">
+                    <div class="h-100" style="overflow: hidden;">
+                        <canvas class="w-100 mx-auto p-3" id="moodGraph"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row my-3 fade-from-bottom">
+        <div class="col-lg-7 col-md-6 col-sm-12 mb-2">
+            <div class="card shadow">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs" data-bs-tabs="tabs">
+                        <li class="nav-item">
+                            <a class="nav-link active" aria-current="true" data-bs-toggle="tab" href="#tasksInProgress">Tasks In Progress</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#closeToComp" data-bs-toggle="tab">Closest To Completion</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body tab-content overflow-auto" style="height: 60vh">
+                    <div class="tab-pane fade show active" id="tasksInProgress" role="tabpanel">
+                        <h1 class="text-muted" th:if="${tasksInProg.isEmpty()}">No Tasks in progress!</h1>
+                        <div th:each="task : ${tasksInProg}">
+                            <div th:if="${task.getClass().getSimpleName() == 'Task'}">
+                                <a th:href="@{/tasks/personal/{taskId}(taskId=${task.getId()})}" class="card m-3 fade-left task" style="text-decoration: none">
+                                    <div class="card-body highlight-card">
+                                        <h3 class="card-title" th:text="${task.getTitle()}"></h3>
+                                        <span class="badge text-bg-danger mb-1" th:if="${task.isOverdue()}">Overdue</span>
+                                        <h5 class="card-text text-muted" th:text="${'Category 📚:'+task.getCategory().getName()}"></h5>
+                                        <h5 th:text="${'Task Type 🚨: '+ task.getType()}"></h5>
+                                        <h6>Progress</h6>
+                                        <div class="pb-2">
+                                            <div class="progress">
+                                                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" th:style="'width:' + ${task.getProgress()} + '%'" th:value="${task.getProgress()}" aria-valuemin="0" aria-valuemax="100" th:text="${task.getProgress()+'%'}"></div>
+                                            </div>
+                                        </div>
+                                        <h6>Task Info</h6>
+                                        <p class="card-text" th:text="${'Date for completion 📅: '+ task.getEndDateString()}"></p>
+                                        <p class="card-text" th:text="${'Details 📝: ' + (task.getDescription().length() >= 150 ? task.getDescription().substring(0, 150) + '...' : task.getDescription())}"></p>
+                                    </div>
+                                </a>
+                            </div>
+                            <div th:if="${task.getClass().getSimpleName() == 'GroupTask'}">
+                                <a th:styleappend="${!user.hasRole('MEMBER') ? 'pointer-events:none': ''}" th:href="@{/tasks/group/{taskId}(taskId=${task.getId()})}" class="card m-3 fade-left task" style="text-decoration: none">
+                                    <div th:classappend="${!user.hasRole('MEMBER') ? 'bg-secondary' : 'highlight-card'}" class="card-body">
+                                        <h3 class="card-title" th:text="${task.getTitle()}"></h3>
+                                        <span class="badge text-bg-danger mb-1" th:if="${task.isOverdue()}">Overdue</span>
+                                        <h5 class="card-text text-muted" th:text="${'Users 🕴️:'+task.getUsers().size()}"></h5>
+                                        <h5 th:text="${'Task Type 🚨: '+ task.getType()}"></h5>
+                                        <h6>Progress</h6>
+                                        <div class="pb-2">
+                                            <div class="progress">
+                                                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" th:style="'width:' + ${task.getProgress()} + '%'" th:value="${task.getProgress()}" aria-valuemin="0" aria-valuemax="100" th:text="${task.getProgress()+'%'}"></div>
+                                            </div>
+                                        </div>
+                                        <h6>Task Info</h6>
+                                        <p class="card-text" th:text="${'Date for completion 📅: '+ task.getEndDateString()}"></p>
+                                        <p class="card-text" th:text="${'Details 📝: ' + (task.getDescription().length() >= 150 ? task.getDescription().substring(0, 150) + '...' : task.getDescription())}"
+                                        ></p>
+                                    </div>
+                                </a>
+                            </div>
+                            <div th:if="${task.getClass().getSimpleName() == 'AssignmentTask'}">
+                                <a th:styleappend="${task.getAssignment().getUsers().size() > 1 && !user.hasRole('MEMBER') ? 'pointer-events:none;': ''}" th:href="@{/academic/assignments/{assignmentId}/tasks/{taskId}(assignmentId=${task.getAssignment().getId()},taskId=${task.getId()})}" class="card m-3 fade-left task" style="text-decoration: none">
+                                    <div th:classappend="${task.getAssignment().getUsers().size() > 1 && !user.hasRole('MEMBER') ? 'bg-secondary': 'highlight-card'}" class="card-body">
+                                        <h3 class="card-title" th:text="${task.getTitle()}"></h3>
+                                        <span class="badge text-bg-danger mb-1" th:if="${task.isOverdue()}">Overdue</span>
+                                        <h5 class="card-text" th:text="${'Assignment 📒:'+task.getAssignment().getTitle()}"></h5>
+                                        <h5 class="card-text text-muted" th:text="'Course: '+${task.getAssignment().getCourse()}"></h5>
+                                        <h5 th:text="${'Task Type 🚨: '+ task.getType()}"></h5>
+                                        <h6>Progress</h6>
+                                        <div class="pb-2">
+                                            <div class="progress">
+                                                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" th:style="'width:' + ${task.getProgress()} + '%'" th:value="${task.getProgress()}" aria-valuemin="0" aria-valuemax="100" th:text="${task.getProgress()+'%'}"></div>
+                                            </div>
+                                        </div>
+                                        <h6>Task Info</h6>
+                                        <p class="card-text" th:text="${'Date for completion 📅: '+ task.getEndDateString()}"></p>
+                                        <p class="card-text"th:text="${'Details 📝: ' + (task.getDescription().length() >= 150 ? task.getDescription().substring(0, 150) + '...' : task.getDescription())}"></p>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="closeToComp" role="tabpanel">
+                        <h1 class="text-muted" th:if="${tasksNearComp.isEmpty()}">No Tasks near completion!</h1>
+                        <div th:each="task : ${tasksNearComp}">
+                            <div th:if="${task.getClass().getSimpleName() == 'Task'}">
+                                <a th:href="@{/tasks/personal/{taskId}(taskId=${task.getId()})}" class="card m-3 fade-left task" style="text-decoration: none">
+                                    <div class="card-body highlight-card">
+                                        <h3 class="card-title" th:text="${task.getTitle()}"></h3>
+                                        <span class="badge text-bg-danger mb-1" th:if="${task.isOverdue()}">Overdue</span>
+                                        <h5 class="card-text text-muted" th:text="${'Category 📚:'+task.getCategory().getName()}"></h5>
+                                        <h5 th:text="${'Task Type 🚨: '+ task.getType()}"></h5>
+                                        <h6>Progress</h6>
+                                        <div class="pb-2">
+                                            <div class="progress">
+                                                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" th:style="'width:' + ${task.getProgress()} + '%'" th:value="${task.getProgress()}" aria-valuemin="0" aria-valuemax="100" th:text="${task.getProgress()+'%'}"></div>
+                                            </div>
+                                        </div>
+                                        <h6>Task Info</h6>
+                                        <p class="card-text" th:text="${'Date for completion 📅: '+ ${task.getEndDateString()}}"></p>
+                                        <p class="card-text" th:text="${'Details 📝: ' + (task.getDescription().length() >= 150 ? task.getDescription().substring(0, 150) + '...' : task.getDescription())}"></p>
+                                    </div>
+                                </a>
+                            </div>
+                            <div th:if="${task.getClass().getSimpleName() == 'GroupTask'}">
+                                <a th:styleappend="${!user.hasRole('MEMBER') ? 'pointer-events:none': ''}" th:href="@{/tasks/group/{taskId}(taskId=${task.getId()})}" class="card  m-3 fade-left task" style="text-decoration: none">
+                                    <div th:classappend="${!user.hasRole('MEMBER') ? 'bg-secondary' : 'highlight-card'}" class="card-body">
+                                        <h3 class="card-title" th:text="${task.getTitle()}"></h3>
+                                        <span class="badge text-bg-danger mb-1" th:if="${task.isOverdue()}">Overdue</span>
+                                        <h5 class="card-text text-muted" th:text="${'Users 🕴️:'+task.getUsers().size()}"></h5>
+                                        <h5 th:text="${'Task Type 🚨: '+ task.getType()}"></h5>
+                                        <h6>Progress</h6>
+                                        <div class="pb-2">
+                                            <div class="progress">
+                                                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" th:style="'width:' + ${task.getProgress()} + '%'" th:value="${task.getProgress()}" aria-valuemin="0" aria-valuemax="100" th:text="${task.getProgress()+'%'}"></div>
+                                            </div>
+                                        </div>
+                                        <h6>Task Info</h6>
+                                        <p class="card-text" th:text="${'Date for completion 📅: '+ ${task.getEndDateString()}}"></p>
+                                        <p class="card-text" th:text="${'Details 📝: ' + (task.getDescription().length() >= 150 ? task.getDescription().substring(0, 150) + '...' : task.getDescription())}"
+                                        ></p>
+                                    </div>
+                                </a>
+                            </div>
+                            <div th:if="${task.getClass().getSimpleName() == 'AssignmentTask'}">
+                                <a th:styleappend="${task.getAssignment().getUsers().size() > 1 && !user.hasRole('MEMBER') ? 'pointer-events:none;': ''}" th:href="@{/academic/assignments/{assignmentId}/tasks/{taskId}(assignmentId=${task.getAssignment().getId()},taskId=${task.getId()})}" class="card m-3 fade-left task" style="text-decoration: none">
+                                    <div th:classappend="${task.getAssignment().getUsers().size() > 1 && !user.hasRole('MEMBER') ? 'bg-secondary': 'highlight-card'}" class="card-body">
+                                        <h3 class="card-title" th:text="${task.getTitle()}"></h3>
+                                        <span class="badge text-bg-danger mb-1" th:if="${task.isOverdue()}">Overdue</span>
+                                        <h5 class="card-text" th:text="${'Assignment 📒:'+task.getAssignment().getTitle()}"></h5>
+                                        <h5 class="card-text text-muted" th:text="'Course: '+${task.getAssignment().getCourse()}"></h5>
+                                        <h5 th:text="${'Task Type 🚨: '+ task.getType()}"></h5>
+                                        <h6>Progress</h6>
+                                        <div class="pb-2">
+                                            <div class="progress">
+                                                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" th:style="'width:' + ${task.getProgress()} + '%'" th:value="${task.getProgress()}" aria-valuemin="0" aria-valuemax="100" th:text="${task.getProgress()+'%'}"></div>
+                                            </div>
+                                        </div>
+                                        <h6>Task Info</h6>
+                                        <p class="card-text" th:text="${'Date for completion 📅: '+ task.getEndDateString()}"></p>
+                                        <p class="card-text"th:text="${'Details 📝: ' + (task.getDescription().length() >= 150 ? task.getDescription().substring(0, 150) + '...' : task.getDescription())}"></p>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5 col-md-6 col-sm-12 mb-2">
+            <div class="card shadow">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs" data-bs-tabs="tabs">
+                        <li class="nav-item">
+                            <a class="nav-link active" aria-current="true" data-bs-toggle="tab" href="#suggestedTasks">Suggested Tasks</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#urgentImportant" data-bs-toggle="tab">Urgent/Important</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body tab-content overflow-auto" style="height: 60vh">
+                    <div class="tab-pane fade show active" id="suggestedTasks" role="tabpanel">
+                        <h5 class="text-muted" th:if="${suggestedTasks.isEmpty()}">No Tasks to suggest!</h5>
+                        <div th:each="task : ${suggestedTasks}">
+                            <div th:if="${task.getClass().getSimpleName() == 'Task'}">
+                                <a th:href="@{/tasks/personal/{taskId}(taskId=${task.getId()})}" class="card m-3 fade-left task" style="text-decoration: none">
+                                    <div class="card-body highlight-card">
+                                        <h4 class="card-text" th:text="${task.getTitle()+task.getStatus()}"></h4>
+                                        <span class="badge text-bg-danger mb-1" th:if="${task.isOverdue()}">Overdue</span>
+                                        <h5 class="card-text text-muted" th:text="'Category 📚:️ '+${task.getCategory().getName()}"></h5>
+                                        <p class="card-text" th:text="'Type 🚨: '+${task.getType()}"></p>
+                                        <hr>
+                                        <h6 class="card-text" th:text="${'Date for completion 📅: '+ task.getEndDateString()}"></h6>
+                                    </div>
+                                </a>
+                            </div>
+                            <div th:if="${task.getClass().getSimpleName() == 'GroupTask'}">
+                                <a th:styleappend="${!user.hasRole('MEMBER') ? 'pointer-events:none': ''}" th:href="@{/tasks/group/{taskId}(taskId=${task.getId()})}" class="card m-3 fade-left task" style="text-decoration: none">
+                                    <div th:classappend="${!user.hasRole('MEMBER') ? 'bg-secondary' : 'highlight-card'}"  class="card-body">
+                                        <h4 class="card-text" th:text="${task.getTitle()+task.getStatus()}"></h4>
+                                        <span class="badge text-bg-danger mb-1" th:if="${task.isOverdue()}">Overdue</span>
+                                        <h5 class="text-muted card-text" th:text="'Number of Users 🕴:️ '+${task.getUsers().size()}"></h5>
+                                        <p class="card-text" th:text="'Type 🚨: '+${task.getType()}"></p>
+                                        <hr>
+                                        <h6 class="card-text" th:text="${'Date for completion 📅: '+ task.getEndDateString()}"></h6>
+                                    </div>
+                                </a>
+                            </div>
+                            <div th:if="${task.getClass().getSimpleName() == 'AssignmentTask'}">
+                                <a th:styleappend="${task.getAssignment().getUsers().size() > 1 && !user.hasRole('MEMBER') ? 'pointer-events:none;': ''}" th:href="@{/academic/assignments/{assignmentId}/tasks/{taskId}(assignmentId=${task.getAssignment().getId()},taskId=${task.getId()})}" class="card m-3 fade-left task" style="text-decoration: none">
+                                    <div  th:classappend="${task.getAssignment().getUsers().size() > 1 && !user.hasRole('MEMBER') ? 'bg-secondary': 'highlight-card'}" class="card-body">
+                                        <h4 class="card-text" th:text="${task.getTitle()+task.getStatus()}"></h4>
+                                        <span class="badge text-bg-danger mb-1" th:if="${task.isOverdue()}">Overdue</span>
+                                        <h5 class="card-title" th:text="'Assignment 📒: '+${task.getAssignment().getTitle()}"></h5>
+                                        <h5 class="card-text text-muted" th:text="'Course: '+${task.getAssignment().getCourse()}"></h5>
+                                        <p class="card-text" th:text="'Type 🚨: '+${task.getType()}"></p>
+                                        <hr>
+                                        <h6 class="card-text" th:text="${'Date for completion 📅: '+ task.getEndDateString()}"></h6>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="urgentImportant" role="tabpanel">
+                        <h5 class="text-muted" th:if="${importantUrgentTasks.isEmpty()}">No important/urgent tasks!</h5>
+                        <div th:each="task : ${importantUrgentTasks}">
+                            <div th:if="${task.getClass().getSimpleName() == 'Task'}">
+                                <a th:href="@{/tasks/personal/{taskId}(taskId=${task.getId()})}" class="card m-3 fade-left task" style="text-decoration: none">
+                                    <div class="card-body highlight-card">
+                                        <h4 class="card-text" th:text="${task.getTitle()+task.getStatus()}"></h4>
+                                        <span class="badge text-bg-danger mb-1" th:if="${task.isOverdue()}">Overdue</span>
+                                        <h5 class="card-text text-muted" th:text="'Category 📚:️ '+${task.getCategory().getName()}"></h5>
+                                        <p class="card-text" th:text="'Type 🚨: '+${task.getType()}"></p>
+                                        <hr>
+                                        <h6 class="card-text" th:text="'Date 📅: '+ ${task.getEndDateString()}"></h6>
+                                    </div>
+                                </a>
+                            </div>
+                            <div th:if="${task.getClass().getSimpleName() == 'GroupTask'}">
+                                <a th:styleappend="${!user.hasRole('MEMBER') ? 'pointer-events:none': ''}" th:href="@{/tasks/group/{taskId}(taskId=${task.getId()})}" class="card  m-3 fade-left task" style="text-decoration: none">
+                                    <div th:classappend="${!user.hasRole('MEMBER') ? 'bg-secondary' : 'highlight-card'}" class="card-body">
+                                        <h4 class="card-text" th:text="${task.getTitle()+task.getStatus()}"></h4>
+                                        <span class="badge text-bg-danger mb-1" th:if="${task.isOverdue()}">Overdue</span>
+                                        <h5 class="text-muted card-text" th:text="'Number of Users 🕴:️ '+${task.getUsers().size()}"></h5>
+                                        <p class="card-text" th:text="'Type 🚨: '+${task.getType()}"></p>
+                                        <hr>
+                                        <h6 class="card-text" th:text="'Date 📅: '+ ${task.getEndDateString()}"></h6>
+                                    </div>
+                                </a>
+                            </div>
+                            <div th:if="${task.getClass().getSimpleName() == 'AssignmentTask'}">
+                                <a th:styleappend="${task.getAssignment().getUsers().size() > 1 && !user.hasRole('MEMBER') ? 'pointer-events:none;': ''}" th:href="@{/academic/assignments/{assignmentId}/tasks/{taskId}(assignmentId=${task.getAssignment().getId()},taskId=${task.getId()})}" class="card m-3 fade-left task" style="text-decoration: none">
+                                    <div th:classappend="${task.getAssignment().getUsers().size() > 1 && !user.hasRole('MEMBER') ? 'bg-secondary': 'highlight-card'}" class="card-body">
+                                        <h4 class="card-text" th:text="${task.getTitle()+task.getStatus()}"></h4>
+                                        <span class="badge text-bg-danger mb-1" th:if="${task.isOverdue()}">Overdue</span>
+                                        <h5 class="card-title" th:text="'Assignment 📒: '+${task.getAssignment().getTitle()}"></h5>
+                                        <h5 class="card-text text-muted" th:text="'Course: '+${task.getAssignment().getCourse()}"></h5>
+                                        <p class="card-text" th:text="'Type 🚨: '+${task.getType()}"></p>
+                                        <hr>
+                                        <h6 class="card-text" th:text="${'Date for completion 📅: '+ task.getEndDateString()}"></h6>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div th:if="${firstLogin}" class="modal fade" id="userMoodModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h3 class="modal-title fs-1">How are you feeling today?</h3>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex flex-wrap justify-content-center">
+                        <span class="ms-2 text-muted mood" data-rating="0">😁</span>
+                        <span class="ms-2 text-muted mood"  data-rating="1">😊</span>
+                        <span class="ms-2 text-muted mood"  data-rating="2">😑</span>
+                        <span class="ms-2 text-muted mood"  data-rating="3">😣</span>
+                        <span class="ms-2 text-muted mood"  data-rating="4">😤</span>
+                        <span class="ms-2 text-muted mood"  data-rating="5">😠</span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="saveMood">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section layout:fragment="scripts">
+    <script th:src="@{/js/home.js}"></script>
+    <script th:inline="javascript">
+        if([[ ${firstLogin} ]]){
+            $(window).on("load", function(){
+                $("#userMoodModal").modal("toggle");
+            });
+        }
+    </script>
+</section>
+</body>
+</html>

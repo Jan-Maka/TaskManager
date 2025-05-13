@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" xmlns="http://www.w3.org/1999/html"
+      layout:decorate="~{layouts/layout}">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" th:href="@{/css/assignment.css}">
+  <title>Assignments</title>
+</head>
+<body>
+<section layout:fragment="content">
+  <meta id="_principal" name="_principal" th:data-principal="${user.getId()}"/>
+  <meta id="_csrf" name="_csrf" th:csrf_content="${_csrf.token}"/>
+  <meta id="_csrf_header" name="_csrf_header" th:csrf_content="${_csrf.headerName}"/>
+  <meta sec:authorize="isAuthenticated()" id="_user_roles" name="_user_roles" th:data-roles="${user.getUserRolesIntoString()}"/>
+
+
+  <div class="row vh-100">
+    <div class="col-12 col-sm-3 col-xl-2 px-sm-2 bg-metal border border-2 shadow d-flex">
+      <div class="d-flex flex-sm-column flex-row align-items-start px-2 pt-2">
+        <a class="d-flex align-items-center mb-3 me-auto text-decoration-none">
+          <span class="fs-4 fw-bold d-none d-sm-inline">Academic Page</span>
+        </a>
+        <ul class="nav nav-pills flex-sm-column flex-row me-auto mb-0 align-items-start">
+          <li class="nav-item mb-1">
+            <a th:href="@{/academic/dashboard}" class="nav-link px-2">
+              <i class="fs-4 bi bi-stack"></i>
+              <span class="ms-1 d-none d-sm-inline">Dashboard</span>
+            </a>
+          </li>
+          <li class="nav-item mb-1">
+            <a th:href="@{/academic/assignments}" class="nav-link px-2 active">
+              <i class="fs-4 bi bi-clipboard"></i>
+              <span class="ms-1 d-none d-sm-inline">Assignments</span>
+            </a>
+          </li>
+          <li sec:authorize="hasRole('ROLE_MEMBER')"  class="nav-item mb-1">
+            <a th:href="@{/academic/study-sessions}" class="nav-link px-2">
+              <i class="fs-4 bi bi-calendar-event"></i>
+              <span class="ms-1 d-none d-sm-inline">Study Sessions</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="col d-flex flex-column">
+      <div class="row overflow-auto fade-left">
+        <div class="col pt-2">
+          <div class="row">
+            <div class="d-flex mb-2">
+              <div class="dropdown mx-1">
+                <a class="btn btn-secondary dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  <i class="bi bi-filter-square"></i> : Filter
+                </a>
+                <ul class="dropdown-menu" id="filters">
+                  <li>
+                    <a class="dropdown-item">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="notStarted" name="notStarted" value="Not Started">
+                        <label class="form-check-label" for="notStarted">Not Started</label>
+                      </div>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="inProgress" name="inProgress" value="In Progress">
+                        <label class="form-check-label" for="inProgress">In Progress</label>
+                      </div>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="completed" name="completed" value="Completed">
+                        <label class="form-check-label" for="completed">Completed</label>
+                      </div>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+              <div class="dropdown mx-1">
+                <a class="btn btn-secondary dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  <i class="bi bi-sort-up"></i> : Sort
+                </a>
+                <ul class="dropdown-menu" id="sort">
+                  <li>
+                    <a class="dropdown-item">
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="sortOption" id="dueDate" value="Due Date">
+                        <label class="form-check-label" for="dueDate">Due Date</label>
+                      </div>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item">
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="sortOption" id="importance"  value="Importance">
+                        <label class="form-check-label" for="importance">Importance</label>
+                      </div>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item">
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="sortOption" id="alphabetically"  value="Alphabetically">
+                        <label class="form-check-label" for="alphabetically">Alphabetically</label>
+                      </div>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item">
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="sortOption"  value="None" checked>
+                        <label class="form-check-label" for="alphabetically">None</label>
+                      </div>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+              <button class="btn btn-primary mx-1" id="filterBtn">
+                <i class="bi bi-arrow-clockwise"></i>
+              </button>
+            </div>
+            <div class="col-xl-4 col-md-6 col-sm-12">
+              <div class="border rounded-3 bg-metal shadow min-vh-100 w-100 mb-2" style="position: relative">
+                <nav class="navbar navbar-expand-lg bg-primary rounded">
+                  <div class="container-fluid">
+                    <h1 class="navbar-brand mb-0 text-white">Assignments</h1>
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#assignmentNavbar" aria-controls="assignmentNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                      <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="assignmentNavbar">
+                      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                      </ul>
+                      <form class="d-flex" id="assignmentSearch">
+                        <input id="search-input" class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+                        <button class="btn btn-success" type="submit">
+                          <i class="bi bi-search"></i>
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                </nav>
+                <div id="assignmentTab" class="overflow-y-auto vh-100 mb-2">
+                  <h5 class="m-2" th:if="${assignments.isEmpty()}">No assignments found!</h5>
+                  <div th:each="assignment: ${assignments}">
+                    <div th:styleappend="${assignment.getUsers().size() > 1 && !user.hasRole('MEMBER') ? 'pointer-events:none;': ''}" th:classappend="${assignment.getUsers().size() > 1 && !user.hasRole('MEMBER') ? 'bg-secondary': 'highlight-card'}" class="card m-3 fade-left assignment" th:data-assignment="${assignment.getId()}">
+                      <div class="card-body">
+                        <h4  class="card-title" th:text="${assignment.getTitle() + assignment.getStatus()}"></h4>
+                        <span class="badge text-bg-danger mb-1" th:if="${assignment.isOverdue()}">Overdue</span>
+                        <h5  class="card-text text-muted" th:text="${'For Course 📚: ' + assignment.getCourse()}"></h5>
+                        <h6  class="card-text" th:text="${'Type 🚨: ' + assignment.getType()}"></h6>
+                        <hr>
+                        <h6 class="card-text" th:text="${'Due Date 📅: ' + assignment.getDueDate()}"></h6>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <button th:disabled="${!user.hasRole('MEMBER') && assignments.size() >= 4 ? true : false}" id="addAssignmentBtn" class="float btn btn-success rounded-circle btn-lg" data-bs-toggle="modal" data-bs-target="#addingAssignment" aria-label="Add Assignment">+</button>
+              </div>
+            </div>
+            <div class="col-xl-8 col-md-6 col-sm-12">
+              <div class="border rounded-3 bg-metal shadow min-vh-100 w-100 mb-2">
+                <nav class="navbar navbar-expand-lg bg-primary rounded">
+                  <div class="container-fluid">
+                    <div id="assignmentTitle">
+                      <h1 class="navbar-brand mb-0 text-white" contenteditable="false">Assignment</h1>
+                    </div>
+                    <div id="editAssignmentBtn" class="ms-auto"></div>
+                  </div>
+                </nav>
+                <div id="assignmentDetail" class="overflow-y-auto border rounded-3 bg-light m-2 vh-100">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!--  modals-->
+  <div class="modal fade" id="addingAssignment" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-primary">
+          <h1 class="modal-title fs-5 text-white" id="staticBackdropLabel">Add Assignment</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="createAssignment" action="#" method="post" enctype="multipart/form-data">
+            <div class="form-floating mb-3">
+              <input required type="text" class="form-control" name="title" id="title" maxlength="100" placeholder="Title">
+              <label for="title" class="fw-semibold">Title</label>
+            </div>
+            <div class="form-floating mb-3">
+              <input required type="text" class="form-control" name="course" id="course" maxlength="30" placeholder="Course">
+              <label for="course" class="fw-semibold">Course</label>
+            </div>
+            <div class="mb-3 form-floating">
+              <select class="form-select" name="type">
+                <option>Urgent/Important</option>
+                <option>Urgent</option>
+                <option>Important</option>
+                <option>Not important or Urgent</option>
+              </select>
+              <label for="type" class="fw-semibold">Type</label>
+            </div>
+            <div class="form-floating mb-3">
+              <textarea class="form-control" maxlength="1000" placeholder="Description" id="description" name="description" style="height: 150px" required></textarea>
+              <label for="description" class="fw-semibold">Description</label>
+            </div>
+            <div class="mb-3 form-floating">
+              <input type="datetime-local" id="startDate" class="form-control" name="startDate" required>
+              <label for="startDate" class="fw-semibold">Start Date</label>
+            </div>
+            <div class="mb-3 form-floating">
+              <input type="datetime-local" id="endDate" class="form-control" name="endDate" required>
+              <label for="endDate" class="fw-semibold">Due Date</label>
+            </div>
+            <div sec:authorize="hasRole('ROLE_MEMBER')"  class="mb-3">
+              <div class="row">
+                <div class="col">
+                  <div id="addingAssignmentSearch">
+                    <label for="addUsers" class="form-label fw-semibold">Add users to assignment</label>
+                  </div>
+                </div>
+                <div class="col">
+                  <div id="addedUsersToAssignment"></div>
+                </div>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="assignment-dropzone" class="form-label fw-semibold">File Attachments</label>
+              <div id="assignment-dropzone" class="dropzone"></div>
+            </div>
+            <button type="submit" class="btn btn-success" id="addAssignment">Add Assignment</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="addingTask" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-primary">
+          <h1 class="modal-title fs-5 text-white">Add Task</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="createTask" action="#" method="post" enctype="multipart/form-data">
+            <div class="form-floating mb-3">
+              <input required type="text" class="form-control" name="title" maxlength="100" placeholder="Title">
+              <label for="title" class="fw-semibold">Title</label>
+            </div>
+            <div class="mb-3 form-floating">
+              <select id="type" class="form-select" name="type">
+                <option>Urgent/Important</option>
+                <option>Urgent</option>
+                <option>Important</option>
+                <option>Not important or Urgent</option>
+              </select>
+              <label for="type" class="fw-semibold">Type</label>
+            </div>
+            <div class="mb-3 form-floating">
+              <input type="datetime-local" class="form-control" name="startDate" required>
+              <label for="startDate" class="fw-semibold">Start</label>
+            </div>
+            <div class="mb-3 form-floating">
+              <input type="datetime-local" class="form-control" name="endDate" required>
+              <label for="endDate" class="fw-semibold">Date For Completion</label>
+            </div>
+            <div class="form-floating mb-3">
+              <textarea class="form-control" maxlength="500" placeholder="Description" name="description" style="height: 100px" required></textarea>
+              <label for="description" class="fw-semibold">Description</label>
+            </div>
+            <div class="mb-3">
+              <label for="workload" class="form-label fw-semibold">Workload Rating</label>
+              <div id="workload" class="d-flex flex-wrap justify-content-center border rounded-3">
+                <span class="ms-2 enlarged workload-emoticon fs-1" data-rating="0">🔧</span>
+                <span class="ms-2 text-muted workload-emoticon fs-1"  data-rating="1">🔨</span>
+                <span class="ms-2 text-muted workload-emoticon fs-1"  data-rating="2">🛠️</span>
+                <span class="ms-2 text-muted workload-emoticon fs-1"  data-rating="3">⚙</span>
+                <span class="ms-2 text-muted workload-emoticon fs-1"  data-rating="4">🧰</span>
+                <span class="ms-2 text-muted workload-emoticon fs-1"  data-rating="5">🛑</span>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="mood" class="form-label fw-semibold">Affect on mood</label>
+              <div id="mood" class="d-flex flex-wrap justify-content-center border rounded-3">
+                <span class="ms-2 enlarged emoticon fs-1" data-rating="0">🤷</span>
+                <span class="ms-2 text-muted emoticon fs-1"  data-rating="1">😐</span>
+                <span class="ms-2 text-muted emoticon fs-1"  data-rating="2">😶</span>
+                <span class="ms-2 text-muted emoticon fs-1"  data-rating="3">😣</span>
+                <span class="ms-2 text-muted emoticon fs-1"  data-rating="4">😤</span>
+                <span class="ms-2 text-muted emoticon fs-1"  data-rating="5">😡</span>
+              </div>
+            </div>
+            <div sec:authorize="hasRole('ROLE_MEMBER')"  class="mb-3">
+              <div class="row">
+                <div class="col">
+                  <div id="addingTaskSearch">
+                    <label for="usersToAdd" class="form-label fw-semibold">Add users to task</label>
+                  </div>
+                </div>
+                <div class="col">
+                  <div id="addedUsersToTask"></div>
+                </div>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="task-dropzone" class="form-label fw-semibold">File Attachments</label>
+              <div id="task-dropzone" class="dropzone"></div>
+            </div>
+            <button type="submit" class="btn btn-success" id="addTask">Add Task</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="taskDetails" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-primary" id="taskHeader">
+        </div>
+        <div class="modal-body" id="taskBody">
+        </div>
+        <div class="modal-footer bg-primary" id="taskFooter">
+        </div>
+      </div>
+    </div>
+  </div>
+
+</section>
+<section layout:fragment="scripts">
+  <script th:src="@{/js/assignment/assignmentsScript.js}"></script>
+  <script th:inline="javascript">
+    if([[ ${showAssignment} ]]){
+      const id = [[${showAssignment}]];
+      $(window).on("load", function(){
+        $(".assignment[data-assignment="+id+"]").click();
+        if([[ ${showTask} ]]){
+          const id = [[${showTask}]];
+          $(".assignment-task[data-task="+id+"]").click();
+        }
+      });
+    }else{
+      $(window).on("load", function(){
+        $("#assignmentTab").children().first().children().first().click();
+      });
+    }
+  </script>
+</section>
+</body>
+</html>

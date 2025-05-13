@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" xmlns="http://www.w3.org/1999/html"
+      layout:decorate="~{layouts/layout}">
+<head>
+  <meta charset="UTF-8">
+  <title>Settings</title>
+</head>
+<body>
+
+<section layout:fragment="content">
+  <meta id="_csrf" name="_csrf" th:csrf_content="${_csrf.token}"/>
+  <meta id="_csrf_header" name="_csrf_header" th:csrf_content="${_csrf.headerName}"/>
+  <meta sec:authorize="isAuthenticated()" id="_user_roles" name="_user_roles" th:data-roles="${user.getUserRolesIntoString()}"/>
+
+  <div class="row vh-100">
+    <div class="col-12 col-sm-3 col-xl-2 px-sm-2 bg-metal border border-2 shadow d-flex">
+      <div class="d-flex flex-sm-column flex-row align-items-start px-2 pt-2">
+        <a class="d-flex align-items-center mb-3 me-auto text-decoration-none">
+          <span class="fs-4 fw-bold d-none d-sm-inline">Social Page</span>
+        </a>
+        <ul class="nav nav-pills flex-sm-column flex-row me-auto mb-0 align-items-start">
+          <li class="nav-item mb-1">
+            <a th:href="@{/social/my-profile}" class="nav-link px-2">
+              <i class="fs-4 bi bi-person-circle"></i>
+              <span class="ms-1 d-none d-sm-inline">Profile</span>
+            </a>
+          </li>
+          <li class="nav-item mb-1">
+            <a th:href="@{/social/search}" class="nav-link px-2">
+              <i class="fs-4 bi bi-search"></i>
+              <span class="ms-1 d-none d-sm-inline">Search</span>
+            </a>
+          </li>
+          <li class="nav-item mb-1">
+            <a th:href="@{/social/messages}" class="nav-link px-2">
+              <i class="fs-4 bi bi-chat-left"></i>
+              <span class="ms-1 d-none d-sm-inline">Messages</span>
+            </a>
+          </li>
+          <li class="nav-item mb-1">
+            <a th:href="@{/social/account-settings}" class="nav-link px-2 active">
+              <i class="fs-4 bi bi-gear"></i>
+              <span class="ms-1 d-none d-sm-inline">Settings</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="col d-flex flex-column">
+      <div class="row overflow-auto fade-from-bottom">
+        <div class="col pt-2">
+          <div class="m-3 p-2 bg-metal border rounded-3 shadow">
+            <div class="row m-2">
+              <div class="col-md-2">
+                <ul class="nav nav-pills flex-column" role="tablist">
+                  <li class="nav-item mb-2">
+                    <a class="nav-link active" data-bs-toggle="pill" href="#yourAccount">Your Account</a>
+                  </li>
+                  <li class="nav-item mb-2">
+                    <a class="nav-link" data-bs-toggle="pill" href="#accountPrivacy">Account Privacy</a>
+                  </li>
+                  <li class="nav-item mb-2">
+                    <a class="nav-link" data-bs-toggle="pill" href="#notifications">Notifications & Emails</a>
+                  </li>
+                  <li class="nav-item mb-2">
+                    <a class="nav-link" data-bs-toggle="pill" href="#membership">Membership</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="col-md-10">
+                <div class="bg-white tab-content border rounded-3 w-100">
+                  <div id="yourAccount" class="container-fluid tab-pane active">
+                    <h3 class="m-3">Your Account</h3>
+                    <section class="container-fluid" th:insert="~{social/account-settings/your-account.html}">
+                    </section>
+                  </div>
+                  <div id="accountPrivacy" class="container-fluid tab-pane">
+                    <h3 class="m-3">Account Privacy</h3>
+                    <section class="container-fluid" th:insert="~{social/account-settings/privacy.html}">
+                    </section>
+                  </div>
+                  <div id="notifications" class="container-fluid tab-pane">
+                      <h3 class="m-3">Notifications & Emails</h3>
+                      <section class="container-fluid" th:insert="~{social/account-settings/notifications.html}">
+                      </section>
+                  </div>
+                  <div id="membership" class="container-fluid tab-pane">
+                    <h3 class="m-3">Membership</h3>
+                    <section class="container-fluid" th:insert="~{social/account-settings/membership.html}">
+                    </section>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section layout:fragment="scripts">
+  <script th:src="@{/js/social/settings.js}"></script>
+</section>
+</body>
+</html>

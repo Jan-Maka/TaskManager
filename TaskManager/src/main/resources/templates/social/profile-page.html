@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" xmlns="http://www.w3.org/1999/html"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <link rel="stylesheet" th:href="@{/css/profile.css}">
+    <meta charset="UTF-8">
+    <title>Profile Page</title>
+</head>
+<body>
+
+<section layout:fragment="content">
+    <meta id="_principal" name="_principal" th:data-principal="${user.getId()}"/>
+    <meta id="_csrf" name="_csrf" th:csrf_content="${_csrf.token}"/>
+    <meta id="_csrf_header" name="_csrf_header" th:csrf_content="${_csrf.headerName}"/>
+    <meta id="userProfile" name="_principal" th:data-principal="${userProfile.getId()}"/>
+
+    <div class="row vh-100">
+        <div class="col-12 col-sm-3 col-xl-2 px-sm-2 bg-metal border border-2 shadow d-flex">
+            <div class="d-flex flex-sm-column flex-row align-items-start px-2 pt-2">
+                <a class="d-flex align-items-center mb-3 me-auto text-decoration-none">
+                    <span class="fs-4 fw-bold d-none d-sm-inline">Social Page</span>
+                </a>
+                <ul class="nav nav-pills flex-sm-column flex-row me-auto mb-0 align-items-start">
+                    <li class="nav-item mb-1">
+                        <a th:href="@{/social/my-profile}" class="nav-link px-2 active">
+                            <i class="fs-4 bi bi-person-circle"></i>
+                            <span class="ms-1 d-none d-sm-inline">Profile</span>
+                        </a>
+                    </li>
+                    <li class="nav-item mb-1">
+                        <a th:href="@{/social/search}" class="nav-link px-2">
+                            <i class="fs-4 bi bi-search"></i>
+                            <span class="ms-1 d-none d-sm-inline">Search</span>
+                        </a>
+                    </li>
+                    <li class="nav-item mb-1">
+                        <a th:href="@{/social/messages}" class="nav-link px-2">
+                            <i class="fs-4 bi bi-chat-left"></i>
+                            <span class="ms-1 d-none d-sm-inline">Messages</span>
+                        </a>
+                    </li>
+                    <li class="nav-item mb-1">
+                        <a th:href="@{/social/account-settings}" class="nav-link px-2">
+                            <i class="fs-4 bi bi-gear"></i>
+                            <span class="ms-1 d-none d-sm-inline">Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="col d-flex flex-column">
+            <div class="row overflow-auto fade-from-bottom">
+                <div class="col p-0">
+                    <div class="card">
+                        <div class="d-flex flex-column bg-dark" style="height: 200px;">
+                            <div class="d-flex flex-column ms-5 mt-5" style="width: 200px;">
+                                <div class="d-inline-block position-relative">
+                                    <img th:id="${ownProfile ? 'profilePic' : ''}" class="img-fluid img-thumbnail rounded-circle" th:if="${userProfile.getBase64ProfilePic()}" th:src="${userProfile.getBase64ProfilePic()}"  style="width: 200px; height: 200px;" alt="profile picture">
+                                    <img th:id="${ownProfile ? 'profilePic' : ''}" class="img-fluid img-thumbnail rounded-circle" th:if="${userProfile.getBase64ProfilePic() == null}" th:src="@{/images/defaultPfp.jpg}" style="width: 200px; height: 200px;" alt="profile picture">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body bg-metal">
+                            <div class="d-flex justify-content-end">
+                                <a class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editProfile" th:if="${ownProfile}">
+                                    Edit Profile
+                                    <i class="fa-solid bi-pen-fill"></i>
+                                </a>
+                                <a class="btn btn-secondary" th:if="${!ownProfile && ((settings.getDisplayEmailString() == 'friend' && isUserFriend) || settings.getDisplayEmailString() == 'all')}" th:href="${'mailto:'+ userProfile.getEmail()}">
+                                    Contact
+                                    <i class="fa-solid bi-envelope-at-fill"></i>
+                                </a>
+                                <a class="btn btn-success mx-2" th:if="${!isUserFriend && !ownProfile && friendRequest == null}" id="friendRequest">
+                                    Send Friend Request
+                                    <i class="fa-solid bi-person-fill-add"></i>
+                                </a>
+                                <a class="btn btn-danger mx-2" th:if="${sentFriendRequest && friendRequest != null}" th:data-request="${friendRequest.getId()}" id="cancelRequest">
+                                    Cancel Friend Request
+                                    <i class="fa-solid bi-person-fill-dash"></i>
+                                </a>
+                                <a class="btn btn-success ms-2" th:if="${receivedFriendRequest && friendRequest != null}" th:data-request="${friendRequest.getId()}" id="addUser">
+                                    Accept Friend Request
+                                    <i class="fa-solid bi-person-check-fill"></i>
+                                </a>
+                                <a class="btn btn-danger mx-2" th:if="${receivedFriendRequest && friendRequest != null}" th:data-request="${friendRequest.getId()}" id="denyRequest">
+                                    Deny Friend Request
+                                    <i class="fa-solid bi-person-fill-dash"></i>
+                                </a>
+                                <a class="btn btn-danger mx-2" th:if="${isUserFriend}" id="removeFriend" th:data-user="${userProfile.getId()}">
+                                    Remove Friend
+                                    <i class="fa-solid bi-person-fill-x"></i>
+                                </a>
+                            </div>
+                            <h2 th:id="${ownProfile ? 'profileUsername' : ''}" th:text="${'@'+userProfile.getUsername()+ (userProfile.hasRole('MEMBER') ? ' 🌟':' 👤')}"></h2>
+                            <h5 class="text-muted" th:if="${ownProfile || ((settings.getDisplayNameString() == 'friend' && isUserFriend) || settings.getDisplayNameString() == 'all')}" th:text="${userProfile.getFullName()}"></h5>
+                            <p class="pt-2" th:id="${ownProfile ? 'profileBio' : ''}" th:text="${userProfile.getBio()}"></p>
+                            <p th:if="${ownProfile || ((settings.getDisplayNumberString() == 'friend' && isUserFriend) || settings.getDisplayNumberString() == 'all')}" class="pt-1 text-muted" th:id="${ownProfile ? 'profileTelephone' : ''}"  th:text="${userProfile.getPhoneNumber()}"></p>
+                            <p th:if="${ownProfile || ((settings.getDisplayLocationString() == 'friend' && isUserFriend) || settings.getDisplayLocationString() == 'all')}" class="text-muted" th:id="${ownProfile ? 'profileLocation' : ''}" th:text="${userProfile.getLocation()}"></p>
+                        </div>
+                    </div>
+                    <div th:if="${ownProfile || (settings.isAccountPrivate() && isUserFriend) || !settings.isAccountPrivate()}" class="row m-0">
+                        <div class="col-xl-2 col-md-12 col-sm-12 p-0">
+                            <div class="border border-bottom-0 bg-white">
+                                <div class="d-flex align-items-center">
+                                    <h3 class="m-2">Friends </h3>
+                                    <p class="m-2 ms-0" th:if="${ownProfile}">(<a href="" data-bs-toggle="modal" data-bs-target="#manageRequests" aria-label="Mange Requests">Manage</a>)</p>
+                                </div>
+                                <hr class="m-0">
+                                <div class="friends-scroll">
+                                    <h6 class="m-2" th:if="${friends.isEmpty()}">No friends!</h6>
+                                    <div th:each="friend :${friends}">
+                                        <a class="border-bottom d-flex highlight-card" th:href="@{/social/profile/{username}(username=${friend.getUsername()})}" style="text-decoration: none;">
+                                            <img class="img-fluid img-thumbnail rounded-circle m-1" th:if="${friend.getBase64ProfilePic() == null}" th:src="@{/images/defaultPfp.jpg}" style="height: 60px; width: 60px;" alt="profile picture">
+                                            <img class="img-fluid img-thumbnail rounded-circle m-1" th:if="${friend.getBase64ProfilePic()}" th:src="${friend.getBase64ProfilePic()}"  style="height: 60px; width: 60px;" alt="profile picture">
+                                            <div class="m-1 d-flex flex-column">
+                                                <p class="m-0 fw-bold" th:text="${'@'+friend.getUsername()}"></p>
+                                                <p th:if="${ownProfile || friend.getAccountSettings().getDisplayNameString() == 'all' ||
+                                                (friend.getAccountSettings().getDisplayNameString() == 'friend' && friend.isUserFriend(user))}" class="m-0" th:text="${friend.getFullName()}"></p>
+                                            </div>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-10 col-md-12 col-sm-12 p-0">
+                            <div class="border bg-white">
+                                <h3 class="m-2">Activity</h3>
+                                <hr class="m-0">
+                                <div class="row custom-row">
+                                    <div th:if="${ownProfile || ((settings.getDisplayTasksString() == 'friend' && isUserFriend) || settings.getDisplayTasksString() == 'all')}" class="col-xl-6 col-md-12 col-sm-12 p-2">
+                                        <div class="border rounded-3 bg-metal w-100 activity-col">
+                                            <div class="bg-primary rounded d-flex align-items-center" style="height: 40px;">
+                                                <h6 class="mb-3 mt-3 text-white px-2">Recently Completed Tasks</h6>
+                                            </div>
+                                            <div class="overflow-y-auto" style="height: calc(100% - 40px);">
+                                                <h6 class="m-2" th:if="${recentTasks.isEmpty()}">No tasks completed.</h6>
+                                                <div th:each="task :${recentTasks}">
+                                                    <div class="card m-3">
+                                                        <div class="card-body">
+                                                            <h4 class="card-title" th:text="${task.getTitle()}"></h4>
+                                                            <h6 class="card-text" th:text="${task.getDescription().length() > 40 ? '📝:'+task.getDescription().substring(0, 39) + '...' : '📝:'+task.getDescription()}"></h6>
+                                                            <hr>
+                                                            <h6 class="card-text" th:text="${'Completed ✅📅: ' + task.getFinishDateString()}"></h6>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div th:classappend="${(ownProfile || ((settings.getDisplayTasksString() == 'friend' && isUserFriend) || settings.getDisplayTasksString() == 'all')) ? 'col-xl-6' : 'col-xl-12'}" class="col-md-12 col-sm-12 p-2">
+                                        <div class="border rounded-3 bg-metal w-100 activity-col">
+                                            <div class="bg-primary rounded d-flex align-items-center" style="height: 40px;">
+                                                <h6 class="mb-3 mt-3 text-white px-2">Task Activity over the week</h6>
+                                            </div>
+                                            <div style="height: calc(100% - 40px);">
+                                                <div class="h-100" style="overflow: hidden;">
+                                                    <canvas class="w-100 mx-auto p-3" id="activityOnTasks"></canvas>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row custom-row">
+                                    <div th:if="${ownProfile || ((settings.getDisplayTasksString() == 'friend' && isUserFriend) || settings.getDisplayTasksString() == 'all')}" class="col col-xl-6 col-md-12 col-sm-12 p-2">
+                                        <div class="border rounded-3 bg-metal w-100 activity-col">
+                                            <div class="bg-primary rounded d-flex align-items-center" style="height: 40px;">
+                                                <h6 class="mb-3 mt-3 text-white px-2">Recently Completed Assignment Tasks</h6>
+                                            </div>
+                                            <div class="overflow-y-auto" style="height: calc(100% - 40px);">
+                                                <h6 class="m-2" th:if="${recentAssignmentTasks.isEmpty()}">No assignment tasks completed.</h6>
+                                                <div th:each="task :${recentAssignmentTasks}">
+                                                    <div class="card m-3">
+                                                        <div class="card-body">
+                                                            <h4 class="card-title" th:text="${task.getTitle()}"></h4>
+                                                            <h6 class="card-text" th:text="${task.getDescription().length() > 40 ? '📝:'+task.getDescription().substring(0, 39) + '...' : '📝:'+task.getDescription()}"></h6>
+                                                            <hr>
+                                                            <h6 class="card-text" th:text="${'Completed ✅📅: ' + task.getFinishDateString()}"></h6>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div th:classappend="${(ownProfile || ((settings.getDisplayTasksString() == 'friend' && isUserFriend) || settings.getDisplayTasksString() == 'all')) ? 'col-xl-6' : 'col-xl-12'}" class="col-md-12 col-sm-12 p-2">
+                                        <div class="border rounded-3 bg-metal w-100 activity-col">
+                                            <div class="bg-primary rounded d-flex align-items-center" style="height: 40px;">
+                                                <h6 class="mb-3 mt-3 text-white px-2">Assignment Task Activity over the week</h6>
+                                            </div>
+                                            <div style="height: calc(100% - 40px);">
+                                                <div class="h-100" style="overflow: hidden;">
+                                                    <canvas class="w-100 mx-auto p-3" id="assignmentTasksActivity"></canvas>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div th:if="${settings.isAccountPrivate() && !isUserFriend && !ownProfile}">
+                        <div class="p-5 m-5 text-center text-muted bg-body">
+                            <i class="fs-1 bi bi-exclamation-circle-fill"></i>
+                            <h1 class="text-body-emphasis">Account Private</h1>
+                            <p class="col-lg-6 mx-auto mb-4">
+                                Only Friends of users can see profile content.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:if="${ownProfile}" class="modal fade" id="manageRequests" aria-labelledby="manageRequests" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary">
+                    <h1  class="modal-title fs-5 text-white">Manage Requests</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="nav nav-pills mb-3" id="requestsTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="receivedRequests" data-bs-toggle="pill" data-bs-target="#requestsReceived" type="button" role="tab" aria-selected="true">Friend Requests</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="requestsSent" data-bs-toggle="pill" data-bs-target="#sentRequests" type="button" role="tab" aria-selected="false">Sent Requests</button>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="pills-tabContent">
+                        <div class="tab-pane fade show active" id="requestsReceived" role="tabpanel" aria-labelledby="receivedRequests" tabindex="0">
+                            <h6 class="m-2" th:if="${friendRequests.isEmpty()}">No Friend Requests Received</h6>
+                            <div th:each="request : ${friendRequests}">
+                                <div class="border-bottom rounded d-flex justify-content-between align-items-center highlight-card" style="text-decoration: none;" th:data-request="${request.getId()}">
+                                    <a class="d-flex align-items-center" th:href="@{/social/profile/{username}(username=${request.getSender().getUsername()})}" style="text-decoration: none;">
+                                        <img class="img-fluid img-thumbnail rounded-circle m-1" th:if="${request.getSender().getBase64ProfilePic() == null}" th:src="@{/images/defaultPfp.jpg}" style="height: 60px; width: 60px;" alt="profile picture">
+                                        <img class="img-fluid img-thumbnail rounded-circle m-1" th:if="${request.getSender().getBase64ProfilePic()}" th:src="${request.getSender().getBase64ProfilePic()}"  style="height: 60px; width: 60px;" alt="profile picture">
+                                        <div class="m-1 d-flex flex-column">
+                                            <p class="m-0 fw-bold" th:text="${request.getSender().getFullName()}"></p>
+                                            <p class="m-0" th:text="${request.getSender().getUsername()}"></p>
+                                        </div>
+                                    </a>
+                                    <div class="d-flex justify-content-start">
+                                        <button class="btn btn-success mx-1 accept-request" th:data-request="${request.getId()}">
+                                            <i class="bi bi-person-check-fill"></i>
+                                        </button>
+                                        <button class="btn btn-danger mx-1 deny-request" th:data-request="${request.getId()}">
+                                            <i class="bi bi-person-dash-fill"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="sentRequests" role="tabpanel" aria-labelledby="requestsSent" tabindex="0">
+                            <h6 class="m-2" th:if="${sentRequests.isEmpty()}">No Friend Requests Sent</h6>
+                            <div th:each="request : ${sentRequests}">
+                                <div class="border-bottom rounded d-flex justify-content-between align-items-center highlight-card" style="text-decoration: none;" th:data-request="${request.getId()}">
+                                    <a class="d-flex align-items-center" th:href="@{/social/profile/{username}(username=${request.getRecipient().getUsername()})}" style="text-decoration: none;">
+                                        <img class="img-fluid img-thumbnail rounded-circle m-1" th:if="${request.getRecipient().getBase64ProfilePic() == null}" th:src="@{/images/defaultPfp.jpg}" style="height: 60px; width: 60px;" alt="profile picture">
+                                        <img class="img-fluid img-thumbnail rounded-circle m-1" th:if="${request.getRecipient().getBase64ProfilePic()}" th:src="${request.getRecipient().getBase64ProfilePic()}"  style="height: 60px; width: 60px;" alt="profile picture">
+                                        <div class="m-1 d-flex flex-column">
+                                            <p class="m-0 fw-bold" th:text="${request.getRecipient().getFullName()}"></p>
+                                            <p class="m-0" th:text="${request.getRecipient().getUsername()}"></p>
+                                        </div>
+                                    </a>
+                                    <div class="d-flex justify-content-start">
+                                        <button class="btn btn-danger mx-1 cancel-request" th:data-request="${request.getId()}">
+                                            <i class="bi bi-person-dash-fill"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-primary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:if="${ownProfile}" class="modal fade" id="editProfile" aria-labelledby="editProfile" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary">
+                    <h1  class="modal-title fs-5 text-white">Edit Profile</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="saveProfileChanges" action="#" method="post" enctype="multipart/form-data">
+                        <div class="d-flex justify-content-center mb-3">
+                            <img id="previewPfp" class="img-fluid img-thumbnail rounded-circle shadow" th:if="${userProfile.getBase64ProfilePic()}" th:src="${userProfile.getBase64ProfilePic()}"  style="width: 200px; height: 200px;" alt="profile picture">
+                            <img id="previewPfp" class="img-fluid img-thumbnail rounded-circle shadow" th:if="${userProfile.getBase64ProfilePic() == null}" th:src="@{/images/defaultPfp.jpg}" style="width: 200px; height: 200px;" alt="profile picture">
+                        </div>
+                        <div class="d-flex align-items-center mb-3">
+                            <input class="form-control" id="pfpFileInput" name="pfpFileInput" type="file" accept="image/*">
+                            <a class="btn btn-danger" id="cancelPfpBtn">X</a>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input required type="text" class="form-control" id="username" name="username" maxlength="25" placeholder="Username" th:value="${userProfile.getUsername()}">
+                            <label for="username" class="fw-semibold">Username</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <textarea type="text" class="form-control" id="bio" name="bio" maxlength="200" placeholder="Bio" th:text="${userProfile.getBio()}" style="height: 125px;"></textarea>
+                            <label for="bio" class="fw-semibold">Bio</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="location" name="location" maxlength="30" placeholder="Location" th:value="${userProfile.getLocation()}">
+                            <label for="location" class="fw-semibold">Location</label>
+                        </div>
+                        <button type="submit" class="btn btn-success">Save</button>
+                        <button type="reset" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</section>
+
+
+<section layout:fragment="scripts">
+    <script th:src="@{/js/social/profile-page.js}"></script>
+</section>
+</body>
+</html>

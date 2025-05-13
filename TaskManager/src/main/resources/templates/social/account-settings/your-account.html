@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns="http://www.w3.org/1999/html">
+<head>
+    <title>Your Account</title>
+</head>
+<body>
+<div class="d-flex flex-column justify-content-start mb-3">
+    <img class="img-fluid img-thumbnail rounded-circle" th:if="${user.getBase64ProfilePic()}" th:src="${user.getBase64ProfilePic()}"  style="width: 200px; height: 200px;" alt="profile picture">
+    <img class="img-fluid img-thumbnail rounded-circle" th:if="${user.getBase64ProfilePic() == null}" th:src="@{/images/defaultPfp.jpg}" style="width: 200px; height: 200px;" alt="profile picture">
+    <h4 class="mx-2 text-muted" th:text="'@'+${user.getUsername()}"></h4>
+</div>
+<form th:action="@{/social/account-settings/update-user}" method="post" th:object="${user}">
+    <h5>Account Information</h5>
+    <p>Change account information here!</p>
+    <hr>
+    <div class="row">
+        <div class=" col form-floating mb-3">
+            <input type="text" class="form-control" id="firstName" name="firstName" placeholder="First Name" th:placeholder="*{firstName}" th:field="*{firstName}" required>
+            <label  for="firstName" class="fw-semibold">First Name</label>
+        </div>
+        <div class="col form-floating mb-3">
+            <input type="text" class="form-control" placeholder="Enter Surname Name" id="surname" th:placeholder="*{surname}" th:field="*{surname}" required>
+            <label class="fw-semibold" for="surname"> Surname</label>
+        </div>
+    </div>
+    <div class="mb-3 form-floating">
+        <input type="tel" class="form-control" id="phoneNumber" th:placeholder="*{phoneNumber}" th:field="*{phoneNumber}" pattern="^(|\\+?[0-9()-\\s]{7,20})$" title="Invalid phone number format.">
+        <label class="fw-semibold" for="phoneNumber">Phone Number</label>
+    </div>
+    <div class="mb-3">
+        <label for="mood" class="form-label fw-semibold">Mood (Today)</label>
+        <input style="display: none" id="mood" class="form-range" type="range" min="0" max="5" th:placeholder="*{moodRating}" th:field="*{moodRating}"/>
+        <div class="d-flex flex-wrap justify-content-center border rounded-3">
+            <span th:classappend="${user.getMoodRating() == 0 ? 'enlarged': 'text-muted'}" class="ms-2 emoticon fs-1" data-rating="0">😁</span>
+            <span th:classappend="${user.getMoodRating() == 1 ? 'enlarged': 'text-muted'}" class="ms-2 emoticon fs-1"  data-rating="1">😊</span>
+            <span th:classappend="${user.getMoodRating() == 2 ? 'enlarged': 'text-muted'}" class="ms-2 emoticon fs-1"  data-rating="2">😑</span>
+            <span th:classappend="${user.getMoodRating() == 3 ? 'enlarged': 'text-muted'}" class="ms-2 emoticon fs-1"  data-rating="3">😣</span>
+            <span th:classappend="${user.getMoodRating() == 4 ? 'enlarged': 'text-muted'}" class="ms-2 emoticon fs-1"  data-rating="4">😤</span>
+            <span th:classappend="${user.getMoodRating() == 5 ? 'enlarged': 'text-muted'}" class="ms-2 emoticon fs-1"  data-rating="5">😠</span>
+        </div>
+    </div>
+    <div class="mb-3 form-floating d-none">
+        <input type="email" class="form-control" placeholder="Email" id="email" th:placeholder="*{email}" th:field="*{email}" required>
+        <label class="fw-semibold" for="Email"> Email</label>
+    </div>
+    <h5>Change Password</h5>
+    <p>Changing will make you log in again.</p>
+    <hr>
+    <p id="passError" class="text-danger" style="display: none"></p>
+    <div class="mb-3 form-floating">
+        <input type="password" class="form-control" placeholder="New Password" id="new-password" th:field="*{password}">
+        <label class="fw-semibold" for="new-password">New Password</label>
+    </div>
+    <div class="mb-3 form-floating">
+        <input type="password" class="form-control" placeholder="Repeat Password" id="re-password">
+        <label class="fw-semibold" for="re-password">Repeat Password</label>
+    </div>
+    <h5>Confirm Changes</h5>
+    <p>Enter your password to confirm the changes</p>
+    <hr>
+    <div class="mb-3 form-floating">
+        <input type="password" class="form-control" placeholder="Enter Password" id="password">
+        <label class="fw-semibold" for="password">Enter Password</label>
+    </div>
+    <div class="mb-3">
+        <button type="submit" class="btn btn-success" id="save" disabled>Save</button>
+        <button type="reset" class="btn btn-outline-danger">Cancel</button>
+    </div>
+</form>
+
+</body>
+</html>

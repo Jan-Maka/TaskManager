@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" xmlns="http://www.w3.org/1999/html"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" th:href="@{/css/assignmentDashboard.css}">
+    <title>Assignment Dashboard</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <meta id="_principal" name="_principal" th:data-principal="${user.getId()}"/>
+    <meta id="_csrf" name="_csrf" th:csrf_content="${_csrf.token}"/>
+    <meta id="_csrf_header" name="_csrf_header" th:csrf_content="${_csrf.headerName}"/>
+    <meta sec:authorize="isAuthenticated()" id="_user_roles" name="_user_roles" th:data-roles="${user.getUserRolesIntoString()}"/>
+
+    <div class="row vh-100">
+        <div class="col-12 col-sm-3 col-xl-2 px-sm-2 bg-metal border border-2 shadow d-flex">
+            <div class="d-flex flex-sm-column flex-row align-items-start px-2 pt-2">
+                <a class="d-flex align-items-center mb-3 me-auto text-decoration-none">
+                    <span class="fs-4 fw-bold d-none d-sm-inline">Academic Page</span>
+                </a>
+                <ul class="nav nav-pills flex-sm-column flex-row me-auto mb-0 align-items-start">
+                    <li class="nav-item mb-1">
+                        <a th:href="@{/academic/dashboard}" class="nav-link px-2 active">
+                            <i class="fs-4 bi bi-stack"></i>
+                            <span class="ms-1 d-none d-sm-inline">Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item mb-1">
+                        <a th:href="@{/academic/assignments}" class="nav-link px-2">
+                            <i class="fs-4 bi bi-clipboard"></i>
+                            <span class="ms-1 d-none d-sm-inline">Assignments</span>
+                        </a>
+                    </li>
+                    <li sec:authorize="hasRole('ROLE_MEMBER')" class="nav-item mb-1">
+                        <a th:href="@{/academic/study-sessions}" class="nav-link px-2">
+                            <i class="fs-4 bi bi-calendar-event"></i>
+                            <span class="ms-1 d-none d-sm-inline">Study Sessions</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="col d-flex flex-column">
+            <div class="row overflow-auto fade-left">
+                <div class="col pt-2">
+                    <div class="row">
+                        <div class="col-xl-6 col-md-6 col-sm-12">
+                            <div class="border rounded-3 bg-metal shadow w-100 m-2" style="height: 40vh;">
+                                <div class="bg-primary rounded d-flex align-items-center" style="height: 40px;">
+                                    <h6 class="mb-3 mt-3 text-white px-2">Activity on Assignment Tasks</h6>
+                                </div>
+                                <div style="height: calc(100% - 40px);">
+                                    <div class="h-100" style="overflow: hidden;">
+                                        <canvas class="w-100 mx-auto p-3" id="activityOnTasks"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="border rounded-3 bg-metal shadow w-100 m-2">
+                                <nav class="border-bottom">
+                                    <div class="nav nav-tabs" id="nav-tab-extra" role="tablist">
+                                        <button class="nav-link tab active" id="nav-assignment-in-progress-tab" data-bs-toggle="tab" data-bs-target="#assignment-in-progress" type="button" role="tab" aria-controls="assignment-in-progress" aria-selected="false">Assignments In Progress</button>
+                                        <button sec:authorize="hasRole('MEMBER')" class="nav-link tab" id="nav-upcoming-session-tab" data-bs-toggle="tab" data-bs-target="#study-sessions" type="button" role="tab" aria-controls="study-sessions" aria-selected="true">Upcoming Study Sessions</button>
+                                    </div>
+                                </nav>
+                                <div class="tab-content">
+                                    <div class="tab-pane fade active show" id="assignment-in-progress" role="tabpanel" aria-labelledby="assignment-deadlines" tabindex="0">
+                                        <div id="assignmentsInProgress" class="overflow-y-auto mb-2" style="height: 60vh">
+                                            <h5 class="m-2" th:if="${assignnmetsInProg.isEmpty()}">No assignments in progress!</h5>
+                                            <div th:each="assignment: ${assignnmetsInProg}">
+                                                 <a th:styleappend="${assignment.getUsers().size() > 1 && !user.hasRole('MEMBER') ? 'pointer-events:none;': ''}" th:href="@{/academic/assignments/{assignmentId}(assignmentId=${assignment.getId()})}"  class="card m-3 fade-left task" style="text-decoration: none">
+                                                    <div th:classappend="${assignment.getUsers().size() > 1 && !user.hasRole('MEMBER') ? 'bg-secondary': 'highlight-card'}" class="card-body">
+                                                        <h4 class="card-text" th:text="${'Assignment 📒: '+assignment.getTitle()+assignment.getStatus()}"></h4>
+                                                        <span class="badge text-bg-danger mb-1" th:if="${assignment.isOverdue()}">Overdue</span>
+                                                        <h5 class="card-text text-muted" th:text="'Course 📚:️ '+${assignment.getCourse()}"></h5>
+                                                        <p class="card-text" th:text="'Type 🚨: '+${assignment.getType()}"></p>
+                                                        <div class="progress">
+                                                             <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" th:style="'width:' + ${assignment.getProgress()} + '%'" th:value="${assignment.getProgress()}" aria-valuemin="0" aria-valuemax="100" th:text="${assignment.getProgress()+'%'}"></div>
+                                                        </div>
+                                                        <hr>
+                                                        <h6 class="card-text" th:text="'Due Date 📅: '+ ${assignment.getDueDate()}"></h6>
+                                                    </div>
+                                                 </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div sec:authorize="hasRole('MEMBER')" class="tab-pane fade show" id="study-sessions" role="tabpanel" aria-labelledby="assignment-tasks" tabindex="0">
+                                        <div id="upcomingSessions" class="overflow-y-auto mb-2" style="height: 60vh">
+                                            <h5 class="m-2" th:if="${studySessions.isEmpty()}">No upcoming study sessions!</h5>
+                                            <div th:each="studySession: ${studySessions}">
+                                                <div>
+                                                    <a  th:href="@{/academic/study-sessions/{sessionId}(sessionId=${studySession.getId()})}" class="card highlight-card m-3 fade-left session" style="text-decoration: none">
+                                                        <div class="card-body">
+                                                            <h4 class="card-title" th:text="${studySession.getTitle()}"></h4>
+                                                            <h6 class="card-text" th:text="${'Date 📅: ' +  studySession.getFormattedDateTimeEventString()}"></h6>
+                                                            <hr>
+                                                            <h6 class="card-text" th:text="${'Location 📍: ' + studySession.getLocation()}"></h6>
+                                                        </div>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-6 col-md-6 col-sm-12">
+                            <div class="border rounded-3 bg-metal shadow w-100 m-2">
+                                <nav class="border-bottom">
+                                    <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                                        <button class="nav-link tab active" id="nav-assignment-deadlines-tab" data-bs-toggle="tab" data-bs-target="#assignment-deadlines" type="button" role="tab" aria-controls="assignment-deadlines" aria-selected="false">Assignment Deadlines</button>
+                                        <button class="nav-link tab" id="nav-assignment-tasks-tab" data-bs-toggle="tab" data-bs-target="#assignment-tasks" type="button" role="tab" aria-controls="assignment-tasks" aria-selected="true">Suggested Assignment Task's To-Do Today</button>
+                                    </div>
+                                </nav>
+                                <div class="tab-content" id="nav-tabContent">
+                                    <div class="tab-pane fade active show" id="assignment-deadlines" role="tabpanel" aria-labelledby="assignment-deadlines" tabindex="0">
+                                        <div id="assignments" class="vh-100 overflow-y-auto mb-2">
+                                            <h5 class="m-2" th:if="${assignments.isEmpty()}">No assignments close to deadline!</h5>
+                                            <div th:each="assignment: ${assignments}">
+                                                <a th:styleappend="${assignment.getUsers().size() > 1 && !user.hasRole('MEMBER') ? 'pointer-events:none;': ''}" th:classappend="${assignment.getUsers().size() > 1 && !user.hasRole('MEMBER') ? 'bg-secondary': 'highlight-card'}" th:href="@{/academic/assignments/{assignmentId}(assignmentId=${assignment.getId()})}" class="card highlight-card m-3 fade-left assignment" style="text-decoration: none;">
+                                                    <div class="card-body">
+                                                        <h4 class="card-title" th:text="${assignment.getTitle() + assignment.getStatus()}"></h4>
+                                                        <span class="badge text-bg-danger mb-1" th:if="${assignment.isOverdue()}">Overdue</span>
+                                                        <h5 class="card-text" th:text="'Course 📚: '+${assignment.getCourse()}"></h5>
+                                                        <h6 class="card-text" th:text="'Type 🚨: '+${assignment.getType()}"></h6>
+                                                        <hr>
+                                                        <h6 class="card-text" th:text="'Due Date 📅: '+ ${assignment.getDueDate()}"></h6>
+                                                    </div>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane fade show" id="assignment-tasks" role="tabpanel" aria-labelledby="assignment-tasks" tabindex="0">
+                                        <div id="assignmentTasks" class="vh-100 overflow-y-auto mb-2">
+                                            <h5 class="m-2" th:if="${assignmentTasks.isEmpty()}">No tasks to suggest!</h5>
+                                            <div th:each="task: ${assignmentTasks}">
+                                                <a th:styleappend="${task.getAssignment().getUsers().size() > 1 && !user.hasRole('MEMBER') ? 'pointer-events:none;': ''}" th:classappend="${task.getAssignment().getUsers().size() > 1 && !user.hasRole('MEMBER') ? 'bg-secondary': 'highlight-card'}" th:href="@{/academic/assignments/{assignmentId}/tasks/{taskId}(assignmentId=${task.getAssignment().getId()},taskId=${task.getId()})}" class="card highlight-card m-3 fade-left task" style="text-decoration: none;">
+                                                    <div class="card-body">
+                                                        <h4 class="card-text" th:text="${task.getTitle() + task.getStatus()}"></h4>
+                                                        <span class="badge text-bg-danger mb-1" th:if="${task.isOverdue()}">Overdue</span>
+                                                        <h5 class="card-title" th:text="'Assignment 📒: '+${task.getAssignment().getTitle()}"></h5>
+                                                        <h5 class="card-text" th:text="'Course 📚: '+${task.getAssignment().getCourse()}"></h5>
+                                                        <h6 class="card-text" th:text="'Type 🚨: '+${task.getType()}"></h6>
+                                                        <hr>
+                                                        <h6 class="card-text" th:text="'Date for completion 📅: '+ ${task.getEndDateString()}"></h6>
+                                                    </div>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section layout:fragment="scripts">
+    <script th:src="@{/js/assignment/dashboardScript.js}"></script>
+</section>
+</body>
+</html>

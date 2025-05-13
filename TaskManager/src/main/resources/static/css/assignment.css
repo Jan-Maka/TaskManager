@@ -1,0 +1,18 @@
+.float{
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    z-index: 999;
+    font-size: 24px;
+}
+
+#edit-assignment-date, #edit-assignment-type, #edit-assignment-progress , #edit-assignment-users ,#edit-assignment-users,#edit-assignment-attachments, #edit-task-progress,#edit-task-type,#edit-task-date,#edit-workload,#edit-mood,#edit-task-attachments{
+    display: none;
+}
+
+*[contenteditable="true"], #edit-assignment-date, #edit-assignment-type, #edit-assignment-progress, #addUsers,#usersAdded ,#edit-assignment-attachments, #edit-task-progress,#edit-task-type,#edit-task-date,#edit-workload,#edit-mood,#userToAdd,#usersAddedToTask,#edit-task-attachments{
+    box-sizing: content-box;
+    padding: 10px;
+    border: 2px solid blue;
+    border-radius: 7px;
+}

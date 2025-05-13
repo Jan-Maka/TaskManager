@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" xmlns="http://www.w3.org/1999/html"
+      layout:decorate="~{layouts/layout}">
+
+<head>
+  <title>Tasks</title>
+  <link rel="stylesheet" th:href="@{/css/task.css}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body>
+
+<section layout:fragment="content">
+  <meta id="_principal" name="_principal" th:data-principal="${user.getId()}"/>
+  <meta id="_csrf" name="_csrf" th:csrf_content="${_csrf.token}"/>
+  <meta id="_csrf_header" name="_csrf_header" th:csrf_content="${_csrf.headerName}"/>
+  <meta th:if="${groupTasks == null && archivedTasks == null}" id="personalType" th:data-personal="${tasks != null ? 'all': 'cat'}"/>
+  <meta th:if="${groupTasks != null}" id="group" th:data-group="${'group'}"/>
+  <meta th:if="${category != null}" id="catId" th:data-catid="${category.getId()}"/>
+  <meta sec:authorize="isAuthenticated()" id="_user_roles" name="_user_roles" th:data-roles="${user.getUserRolesIntoString()}"/>
+
+  <div class="row vh-100">
+    <div class="col-12 col-sm-3 col-xl-2 px-sm-2 bg-metal border border-2 shadow d-flex">
+      <div class="d-flex flex-sm-column flex-row align-items-start px-2 pt-2">
+        <a class="d-flex align-items-center mb-3 me-auto text-decoration-none">
+          <span class="fs-4 fw-bold d-none d-sm-inline">Tasks Page</span>
+        </a>
+        <ul class="nav nav-pills flex-sm-column flex-row me-auto mb-0 align-items-start">
+          <li class="nav-item mb-1">
+            <a th:href="@{/tasks/dashboard}" class="nav-link px-2">
+              <i class="fs-4 bi bi-stack"></i>
+              <span class="ms-1 d-none d-sm-inline">Dashboard</span>
+            </a>
+          </li>
+          <li class="nav-item mb-1">
+            <a href="#categories" data-bs-toggle="collapse" th:classappend="${tasks != null || category != null ? 'active' : ''}" class="nav-link px-2">
+              <i class="fs-4 bi-bookmarks"></i>
+              <span class="ms-1 d-none d-sm-inline">Personal Tasks</span>
+            </a>
+            <ul class="collapse show nav flex-column ms-1 mt-2" id="categories" data-bs-parent="#menu">
+              <li class="w-100">
+                <a th:href="@{/tasks/personal}" th:classappend="${tasks != null ? 'active' : ''}" class="nav-link px-2"> <span>All Tasks</span></a>
+              </li>
+              <li class="w-100" th:each="cat: ${categories}">
+                <a th:href="@{/tasks/category(cat=${cat.getName()}, id=${cat.getId()})}" th:classappend="${category != null && category == cat ? 'active' : ''}" class="nav-link px-2"> <span th:text="${cat.getName()}"></span></a>
+              </li>
+              <li class="w-100">
+                <button th:disabled="${!user.hasRole('MEMBER') && categories.size() >= 4 ? true : false}" class="btn btn-success text-nowrap my-2" id="addCat" data-bs-toggle="modal" data-bs-target="#addingCategory" aria-label="Add Type">+ Category</button>
+              </li>
+            </ul>
+          </li>
+          <li sec:authorize="hasRole('ROLE_MEMBER')" class="nav-item mb-1">
+            <a  th:href="@{/tasks/group}" th:classappend="${groupTasks != null ? 'active' : ''}" class="nav-link px-2">
+              <i class="fs-4 bi bi-people"></i>
+              <span class="ms-1 d-none d-sm-inline">Group Tasks</span>
+            </a>
+          </li>
+          <li sec:authorize="hasRole('ROLE_MEMBER')" class="nav-item mb-1">
+            <a th:href="@{/tasks/archived}" th:classappend="${archivedTasks != null ? 'active' : ''}" class="nav-link px-2">
+              <i class="fs-4 bi bi-save"></i>
+              <span class="ms-1 d-none d-sm-inline">Archived Tasks</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="col d-flex flex-column">
+      <div class="row overflow-auto fade-left">
+        <div class="col pt-2">
+          <div class="border rounded-3 my-3 bg-white w-100">
+            <nav class="navbar navbar-expand-lg bg-primary rounded">
+              <div class="container-fluid">
+                <h1 th:if="${tasks != null}"class="navbar-brand fw-bold  mb-0 text-white">All Tasks</h1>
+                <div th:if="${category != null}" class="d-flex">
+                  <h1 class="navbar-brand fw-bold  mb-0 text-white" th:text="${category.getName()}"></h1>
+                  <button type="button" id="delCat" data-bs-toggle="modal" data-bs-target="#deletingCategory" class="btn-close me-auto pt-3" aria-label="Close" th:data-name="${category.getName()}" th:data-cat="${category.getId()}"></button>
+                </div>
+                <h1 th:if="${groupTasks != null}"class="navbar-brand fw-bold  mb-0 text-white">Group Tasks</h1>
+                <h1 th:if="${archivedTasks != null}"class="navbar-brand fw-bold  mb-0 text-white">Archived Tasks</h1>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navBar" aria-controls="navBar" aria-expanded="false" aria-label="Toggle navigation">
+                  <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navBar">
+                  <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                  </ul>
+                  <form class="d-flex" id="searchTasks">
+                    <input id="searchInput" class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+                    <button class="btn btn-success" type="submit">
+                      <i class="bi bi-search"></i>
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </nav>
+            <div class="overflow-auto vh-100" id="tasks">
+<!--              Display all personal tasks-->
+              <h1 th:if="${tasks != null && tasks.isEmpty()}" class="text-muted m-3">Start Creating Tasks!</h1>
+              <div th:if="${tasks != null}" th:each="task : ${tasks}">
+                <div class="task card highlight-card m-4" th:data-task="${task.getId()}" th:data-cat="${task.getCategory().getName()}" data-type="task">
+                  <div class="card-body">
+                    <h3 class="card-title" th:text="${task.getTitle()} + ${task.getStatus()}"></h3>
+                    <span class="badge text-bg-danger mb-1" th:if="${task.isOverdue()}">Overdue</span>
+                    <h4 class="card-text text-muted" th:text="${'Category 📚:'+task.getCategory().getName()}"></h4>
+                    <h5 th:text="${'Task Type 🚨: '+ task.getType()}"></h5>
+                    <h6>Progress 📊:</h6>
+                    <div class="pb-2">
+                      <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" th:style="'width:' + ${task.getProgress()} + '%'" th:value="${task.getProgress()}" aria-valuemin="0" aria-valuemax="100" th:text="${task.getProgress()+'%'}"></div>
+                      </div>
+                    </div>
+                    <h6>Task Info 📓:</h6>
+                    <p class="card-text" th:text="${'Date for completion 📅: '+ task.getEndDateString()}"></p>
+                    <p class="card-text" th:text="${'Details 📝: ' + (task.getDescription().length() >= 150 ? task.getDescription().substring(0, 150) + '...' : task.getDescription())}"></p>
+                  </div>
+                </div>
+              </div>
+<!--              Display all tasks in category-->
+              <h1 th:if="${category != null && categoryTasks.isEmpty()}" class="text-muted m-3">Start Creating Tasks!</h1>
+              <div th:if="${category != null}" th:each="task : ${category == null ? '' : categoryTasks}">
+                <div th:if="${!task.isArchive()}" class="task card highlight-card m-4" th:data-task="${task.getId()}" th:data-cat="${task.getCategory().getName()}" data-type="task">
+                  <div class="card-body">
+                    <h3 class="card-title" th:text="${task.getTitle()} + ${task.getStatus()}"></h3>
+                    <span class="badge text-bg-danger mb-1" th:if="${task.isOverdue()}">Overdue</span>
+                    <h4 class="card-text text-muted" th:text="${'Category 📚:'+task.getCategory().getName()}"></h4>
+                    <h5 th:text="${'Task Type 🚨: '+ task.getType()}"></h5>
+                    <h6>Progress 📊:</h6>
+                    <div class="pb-2">
+                      <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" th:style="'width:' + ${task.getProgress()} + '%'" th:value="${task.getProgress()}" aria-valuemin="0" aria-valuemax="100" th:text="${task.getProgress()+'%'}"></div>
+                      </div>
+                    </div>
+                    <h6>Task Info 📓:</h6>
+                    <p class="card-text" th:text="${'Date for completion 📅: '+ task.getEndDateString()}"></p>
+                    <p class="card-text" th:text="${'Details 📝: ' + (task.getDescription().length() >= 150 ? task.getDescription().substring(0, 150) + '...' : task.getDescription())}"></p>
+                  </div>
+                </div>
+              </div>
+<!--              Display Group tasks-->
+              <h1 th:if="${groupTasks != null && groupTasks.isEmpty()}" class="text-muted m-3">Start Creating Tasks!</h1>
+              <div th:if="${groupTasks != null}" th:each="task : ${groupTasks}">
+                <div class="task card highlight-card m-4" th:data-task="${task.getId()}" data-type="groupTask">
+                  <div class="card-body">
+                    <h3 class="card-title" th:text="${task.getTitle()} + ${task.getStatus()}"></h3>
+                    <span class="badge text-bg-danger mb-1" th:if="${task.isOverdue()}">Overdue</span>
+                    <h4 class="card-text text-muted" th:text="${'Users 🕴️:'+task.getUsers().size()}"></h4>
+                    <h5 th:text="${'Task Type 🚨: '+ task.getType()}"></h5>
+                    <h6>Progress 📊:</h6>
+                    <div class="pb-2">
+                      <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" th:style="'width:' + ${task.getProgress()} + '%'" th:value="${task.getProgress()}" aria-valuemin="0" aria-valuemax="100" th:text="${task.getProgress()+'%'}"></div>
+                      </div>
+                    </div>
+                    <h6>Task Info 📓:</h6>
+                    <p class="card-text" th:text="${'Date for completion 📅: '+ task.getEndDateString()}"></p>
+                    <p class="card-text" th:text="${'Details 📝: ' + (task.getDescription().length() >= 150 ? task.getDescription().substring(0, 150) + '...' : task.getDescription())}"></p>
+                  </div>
+                </div>
+              </div>
+<!--              Display Archived tasks-->
+              <h1 th:if="${archivedTasks != null && archivedTasks.isEmpty()}" class="text-muted m-3">No Tasks Archived!</h1>
+              <div th:if="${archivedTasks != null}" th:each="task : ${archivedTasks}">
+                <div class="task card highlight-card m-4" th:data-task="${task.getId()}" th:data-cat="${task.getCategory().getName()}" data-type="task">
+                  <div class="card-body">
+                    <h3 class="card-title" th:text="${task.getTitle()} + ${task.getStatus()}"></h3>
+                    <h4 class="card-text text-muted" th:text="${'Category 📚:'+task.getCategory().getName()}"></h4>
+                    <h5 th:text="${'Task Type 🚨: '+ task.getType()}"></h5>
+                    <h6>Progress 📊:</h6>
+                    <div class="pb-2">
+                      <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" th:style="'width:' + ${task.getProgress()} + '%'" th:value="${task.getProgress()}" aria-valuemin="0" aria-valuemax="100" th:text="${task.getProgress()+'%'}"></div>
+                      </div>
+                    </div>
+                    <h6>Task Info 📓:</h6>
+                    <p class="card-text" th:text="${'Date for completion 📅: '+ task.getEndDateString()}"></p>
+                    <p class="card-text" th:text="${'Details 📝: ' + (task.getDescription().length() >= 150 ? task.getDescription().substring(0, 150) + '...' : task.getDescription())}"></p>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+            <button th:if="${tasks != null || category != null}" id="addTaskBtn" class="float btn btn-success rounded-circle btn-lg" data-bs-toggle="modal" data-bs-target="#addingTask" aria-label="Add" th:disabled="${categories.isEmpty() ? true:false}">+</button>
+            <button th:if="${groupTasks != null}" class="float btn btn-success rounded-circle btn-lg" data-bs-toggle="modal" data-bs-target="#addingGroupTask" aria-label="Add">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!--  Modals-->
+  <div  class="modal fade" id="addingCategory" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-primary">
+          <h1 class="modal-title fs-5 text-white" >Add New Category</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="createCategory" method="post">
+            <div class="mb-3">
+              <div class="form-floating">
+                <input type="text" class="form-control" id="newCategory" placeholder="E.g. Work" required>
+                <label for="newCategory" class="fw-semibold">Category</label>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-success" id="addCategory">Add Category</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div th:if="${category != null}" class="modal fade" id="deletingCategory" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-primary" id="delCatHeader">
+        </div>
+        <div class="modal-body" id="delCatBody">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div th:if="${category != null || tasks != null}" class="modal fade" id="addingTask" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-primary">
+          <h1 class="modal-title fs-5 text-white" id="staticBackdropLabel">Add a Task</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="createTask" action="#" method="post" enctype="multipart/form-data">
+            <div class="form-floating mb-3">
+              <input required type="text" class="form-control" name="title" id="title" maxlength="100" placeholder="Title">
+              <label for="title" class="fw-semibold">Title</label>
+            </div>
+            <div class="mb-3 form-floating">
+              <select id="category" class="form-select" name="category">
+                <option th:each="cat: ${categories}" th:value="${cat.getId()}" th:text="${cat.getName()}"></option>
+              </select>
+              <label for="category" class="fw-semibold">Category</label>
+            </div>
+            <div class="mb-3 form-floating">
+              <select id="type" class="form-select" name="type">
+                <option>Urgent/Important</option>
+                <option>Urgent</option>
+                <option>Important</option>
+                <option>Not important or Urgent</option>
+              </select>
+              <label for="type" class="fw-semibold">Type</label>
+            </div>
+            <div class="mb-3 form-floating">
+              <input type="datetime-local" id="dateStart" class="form-control" name="startDate" required>
+              <label for="dateStart" class="fw-semibold">Start</label>
+            </div>
+            <div class="mb-3 form-floating">
+              <input type="datetime-local" id="dateEnd" class="form-control" name="endDate" required>
+              <label for="dateEnd" class="fw-semibold">Date For Completion</label>
+            </div>
+            <div class="form-floating mb-3">
+              <textarea class="form-control" maxlength="500" placeholder="Description" id="description" name="description" style="height: 100px" required></textarea>
+              <label for="description" class="fw-semibold">Description</label>
+            </div>
+            <div class="mb-3">
+              <label for="workload" class="form-label fw-semibold">Workload Rating</label>
+              <div id="workload" class="d-flex flex-wrap justify-content-center border rounded-3">
+                <span class="ms-2 enlarged workload-emoticon fs-1" data-rating="0">🔧</span>
+                <span class="ms-2 text-muted workload-emoticon fs-1"  data-rating="1">🔨</span>
+                <span class="ms-2 text-muted workload-emoticon fs-1"  data-rating="2">🛠️</span>
+                <span class="ms-2 text-muted workload-emoticon fs-1"  data-rating="3">⚙</span>
+                <span class="ms-2 text-muted workload-emoticon fs-1"  data-rating="4">🧰</span>
+                <span class="ms-2 text-muted workload-emoticon fs-1"  data-rating="5">🛑</span>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="mood" class="form-label fw-semibold">Affect on mood</label>
+              <div id="mood" class="d-flex flex-wrap justify-content-center border rounded-3">
+                <span class="ms-2 enlarged emoticon fs-1" data-rating="0">🤷</span>
+                <span class="ms-2 text-muted emoticon fs-1"  data-rating="1">😐</span>
+                <span class="ms-2 text-muted emoticon fs-1"  data-rating="2">😶</span>
+                <span class="ms-2 text-muted emoticon fs-1"  data-rating="3">😣</span>
+                <span class="ms-2 text-muted emoticon fs-1"  data-rating="4">😤</span>
+                <span class="ms-2 text-muted emoticon fs-1"  data-rating="5">😡</span>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="my-dropzone" class="form-label fw-semibold">File Attachments</label>
+              <div id="my-dropzone" class="dropzone"></div>
+            </div>
+            <button type="submit" class="btn btn-success" id="addTask">Add Task</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div th:if="${groupTasks != null}" class="modal fade" id="addingGroupTask" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-primary">
+          <h1 class="modal-title fs-5 text-white">Add a Group Task</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="createGroupTask" action="#" method="post" enctype="multipart/form-data">
+            <div class="form-floating mb-3">
+              <input required type="text" class="form-control" name="title" maxlength="100" placeholder="Title">
+              <label for="title" class="fw-semibold">Title</label>
+            </div>
+            <div class="mb-3 form-floating">
+              <select class="form-select" name="type">
+                <option>Urgent/Important</option>
+                <option>Urgent</option>
+                <option>Important</option>
+                <option>Not important or Urgent</option>
+              </select>
+              <label for="type" class="fw-semibold">Type</label>
+            </div>
+            <div class="mb-3 form-floating">
+              <input type="datetime-local" class="form-control" name="startDate" required>
+              <label for="dateStart" class="fw-semibold">Start</label>
+            </div>
+            <div class="mb-3 form-floating">
+              <input type="datetime-local" class="form-control" name="endDate" required>
+              <label for="dateEnd" class="fw-semibold">Date For Completion</label>
+            </div>
+            <div class="form-floating mb-3">
+              <textarea class="form-control" maxlength="500" placeholder="Description" name="description" style="height: 100px" required></textarea>
+              <label for="description" class="fw-semibold">Description</label>
+            </div>
+            <div class="mb-3">
+              <label for="workload" class="form-label fw-semibold">Workload Rating</label>
+              <div id="workload" class="d-flex flex-wrap justify-content-center border rounded-3">
+                <span class="ms-2 enlarged workload-emoticon fs-1" data-rating="0">🔧</span>
+                <span class="ms-2 text-muted workload-emoticon fs-1"  data-rating="1">🔨</span>
+                <span class="ms-2 text-muted workload-emoticon fs-1"  data-rating="2">🛠️</span>
+                <span class="ms-2 text-muted workload-emoticon fs-1"  data-rating="3">⚙</span>
+                <span class="ms-2 text-muted workload-emoticon fs-1"  data-rating="4">🧰</span>
+                <span class="ms-2 text-muted workload-emoticon fs-1"  data-rating="5">🛑</span>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="mood" class="form-label fw-semibold">Affect on mood</label>
+              <div id="mood" class="d-flex flex-wrap justify-content-center border rounded-3">
+                <span class="ms-2 enlarged emoticon fs-1" data-rating="0">🤷</span>
+                <span class="ms-2 text-muted emoticon fs-1"  data-rating="1">😐</span>
+                <span class="ms-2 text-muted emoticon fs-1"  data-rating="2">😶</span>
+                <span class="ms-2 text-muted emoticon fs-1"  data-rating="3">😣</span>
+                <span class="ms-2 text-muted emoticon fs-1"  data-rating="4">😤</span>
+                <span class="ms-2 text-muted emoticon fs-1"  data-rating="5">😡</span>
+              </div>
+            </div>
+            <div class="mb-3">
+              <div class="row">
+                <div class="col">
+                  <label for="addUserToTask" class="form-label fw-semibold">Add users for task</label>
+                  <div id="addUserToTask" class="border border-3 rounded overflow-auto" style="height: 150px;">
+                    <div class="d-flex">
+                      <input id="search-friend-input" class="form-control" type="search" placeholder="Search" aria-label="Search">
+                      <a class="btn btn-success" id="search-friends">
+                        <i class="bi bi-search"></i>
+                      </a>
+                    </div>
+                    <div id="user-friends">
+                    </div>
+                  </div>
+                </div>
+                <div class="col">
+                  <label for="user-on-task" class="form-label fw-semibold">Users added to task</label>
+                  <div id="user-on-task" class="border border-3 rounded overflow-auto" style="height: 150px;">
+                    <div id="users-added">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="my-dropzone" class="form-label fw-semibold">File Attachments</label>
+              <div id="my-dropzone" class="dropzone"></div>
+            </div>
+            <button type="submit" class="btn btn-success" id="addGroupTask">Add Task</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="taskDetails" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-primary" id="taskHeader">
+        </div>
+        <div class="modal-body" id="taskBody">
+        </div>
+        <div class="modal-footer bg-primary" id="taskFooter">
+        </div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<section layout:fragment="scripts">
+  <script th:src="@{/js/task/tasks.js}"></script>
+  <script th:inline="javascript">
+    if([[ ${showTask} ]]){
+      const id = [[${showTask}]];
+      $(window).on("load", function(){
+        $(".task[data-task="+id+"]").click();
+      });
+    }
+  </script>
+</section>
+
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" xmlns="http://www.w3.org/1999/html"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" th:href="@{/css/calendar.css}">
+    <title>Calendar</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <meta id="_principal" name="_principal" th:data-principal="${user.getId()}"/>
+    <meta id="_csrf" name="_csrf" th:csrf_content="${_csrf.token}"/>
+    <meta id="_csrf_header" name="_csrf_header" th:csrf_content="${_csrf.headerName}"/>
+    <meta sec:authorize="isAuthenticated()" id="_user_roles" name="_user_roles" th:data-roles="${user.getUserRolesIntoString()}"/>
+
+    <div class="fade-from-bottom border rounded-3 my-3 bg-light shadow vh-100">
+        <div id='calendar'></div>
+    </div>
+
+<!--    Modals-->
+    <div class="modal fade" id="detailsModal" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary" id="detailsHeader">
+                </div>
+                <div class="modal-body" id="detailsBody">
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</section>
+
+<section layout:fragment="scripts">
+    <script th:src="@{/js/calendar/calendar.js}"></script>
+</section>
+</body>
+</html>
